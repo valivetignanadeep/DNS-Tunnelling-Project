@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+@theme {
+  --color-neon-pink: #ec4899;
+  --color-neon-cyan: #06b6d4;
+  --color-glass-white: rgba(255, 255, 255, 0.03);
+}
+
+@layer base {
+  body {
+    @apply bg-[#020617] text-slate-200 antialiased selection:bg-blue-500/30;
+    margin: 0;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-slate-900/40 backdrop-blur-md border border-slate-800/50 shadow-xl transition-all duration-300;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-slate-800 rounded-full hover:bg-slate-700;
+  }
+}
+
+/* Animations from previous builds */
+@keyframes pulse-slow {
+
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
