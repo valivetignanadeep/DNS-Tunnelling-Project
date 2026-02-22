@@ -4,7 +4,7 @@ import {
     ResponsiveContainer, PieChart, Pie, Cell, ScatterChart, Scatter, ZAxis
 } from 'recharts';
 
-const NEON_COLORS = ['#ec4899', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444'];
+const EXECUTIVE_COLORS = ['#b91c1c', '#b45309', '#4338ca', '#047857', '#334155']; // Crimson, Amber, Indigo, Emerald, Slate
 
 const AnomalyCharts = ({ results }) => {
 
@@ -51,9 +51,9 @@ const AnomalyCharts = ({ results }) => {
         <div className="space-y-8 mb-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Risk Distribution */}
-                <div className="glass-card p-8 rounded-2xl border border-slate-800/40 relative overflow-hidden group shadow-lg">
-                    <h3 className="text-white text-lg font-bold mb-8 flex items-center tracking-wide">
-                        <span className="w-1.5 h-5 bg-neon-pink rounded-full mr-4"></span>
+                <div className="bg-white p-8 rounded-2xl border border-slate-200 relative overflow-hidden group shadow-md">
+                    <h3 className="text-slate-900 text-lg font-bold mb-8 flex items-center tracking-wide">
+                        <span className="w-1.5 h-5 bg-indigo-600 rounded-full mr-4 shadow-sm"></span>
                         Risk Classification
                     </h3>
                     <div className="h-64 w-full">
@@ -71,35 +71,36 @@ const AnomalyCharts = ({ results }) => {
                                     cornerRadius={6}
                                 >
                                     {riskDistribution.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={NEON_COLORS[index % NEON_COLORS.length]} />
+                                        <Cell key={`cell-${index}`} fill={EXECUTIVE_COLORS[index % EXECUTIVE_COLORS.length]} />
                                     ))}
                                 </Pie>
                                 <Tooltip
-                                    contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px' }}
-                                    itemStyle={{ color: '#cbd5e1' }}
+                                    contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
+                                    itemStyle={{ color: '#1e293b' }}
                                 />
-                                <Legend />
+                                <Legend wrapperStyle={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: 'bold' }} />
                             </PieChart>
                         </ResponsiveContainer>
                     </div>
                 </div>
 
                 {/* Top Source IPs */}
-                <div className="glass-card p-8 rounded-2xl border border-slate-800/40 shadow-lg">
-                    <h3 className="text-white text-lg font-bold mb-8 flex items-center tracking-wide">
-                        <span className="w-1.5 h-5 bg-neon-cyan rounded-full mr-4"></span>
+                <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-md">
+                    <h3 className="text-slate-900 text-lg font-bold mb-8 flex items-center tracking-wide">
+                        <span className="w-1.5 h-5 bg-indigo-500 rounded-full mr-4 shadow-sm"></span>
                         Top Attacking Nodes
                     </h3>
                     <div className="h-64 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={topTalkers} layout="vertical">
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
-                                <XAxis type="number" stroke="#64748b" tick={{ fontSize: 10 }} />
-                                <YAxis dataKey="ip" type="category" stroke="#64748b" tick={{ fontSize: 10 }} width={100} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+                                <XAxis type="number" stroke="#94a3b8" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                                <YAxis dataKey="ip" type="category" stroke="#94a3b8" tick={{ fontSize: 10 }} width={100} axisLine={false} tickLine={false} />
                                 <Tooltip
-                                    contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px' }}
+                                    contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
+                                    itemStyle={{ color: '#1e293b' }}
                                 />
-                                <Bar dataKey="count" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+                                <Bar dataKey="count" fill="#4338ca" radius={[0, 4, 4, 0]} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
@@ -107,57 +108,57 @@ const AnomalyCharts = ({ results }) => {
             </div>
 
             {/* Lexical Pattern Analysis */}
-            <div className="glass-card p-8 rounded-2xl border border-slate-800/40 shadow-lg relative overflow-hidden">
+            <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-md relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-                    <span className="text-[80px] font-mono font-bold text-blue-500">LEXICAL</span>
+                    <span className="text-[80px] font-mono font-bold text-indigo-500">LEXICAL</span>
                 </div>
-                <h3 className="text-white text-lg font-bold mb-8 flex items-center tracking-wide">
-                    <span className="w-1.5 h-5 bg-emerald-500 rounded-full mr-4"></span>
+                <h3 className="text-slate-900 text-lg font-bold mb-8 flex items-center tracking-wide">
+                    <span className="w-1.5 h-5 bg-emerald-600 rounded-full mr-4 shadow-sm"></span>
                     Pattern Signature (Entropy vs Length)
                 </h3>
                 <div className="h-[400px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
                         <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                             <XAxis
                                 type="number"
                                 dataKey="length"
                                 name="Length"
                                 unit="ch"
-                                stroke="#64748b"
-                                label={{ value: 'Query Length', position: 'bottom', fill: '#64748b', fontSize: 12 }}
+                                stroke="#94a3b8"
+                                label={{ value: 'Query Length', position: 'bottom', fill: '#94a3b8', fontSize: 12 }}
                             />
                             <YAxis
                                 type="number"
                                 dataKey="entropy"
                                 name="Entropy"
-                                stroke="#64748b"
-                                label={{ value: 'Entropy', angle: -90, position: 'left', fill: '#64748b', fontSize: 12 }}
+                                stroke="#94a3b8"
+                                label={{ value: 'Entropy', angle: -90, position: 'left', fill: '#94a3b8', fontSize: 12 }}
                             />
                             <ZAxis type="number" dataKey="risk" range={[50, 400]} />
                             <Tooltip
                                 cursor={{ strokeDasharray: '3 3' }}
-                                contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px' }}
-                                labelStyle={{ color: '#fff' }}
+                                contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '12px', boxShadow: '0 8px 16px rgba(0,0,0,0.08)' }}
+                                labelStyle={{ color: '#1e293b' }}
                                 formatter={(value, name) => [value, name.toUpperCase()]}
                             />
-                            <Scatter name="Signatures" data={lexicalScatter} fill="#8b5cf6">
+                            <Scatter name="Signatures" data={lexicalScatter} fill="#4338ca">
                                 {lexicalScatter.map((entry, index) => (
                                     <Cell
                                         key={`cell-${index}`}
-                                        fill={entry.risk >= 80 ? '#ef4444' : entry.risk >= 40 ? '#f59e0b' : '#3b82f6'}
-                                        fillOpacity={0.6}
-                                        stroke={entry.risk >= 80 ? '#ef4444' : entry.risk >= 40 ? '#f59e0b' : '#3b82f6'}
+                                        fill={entry.risk >= 80 ? '#b91c1c' : entry.risk >= 40 ? '#b45309' : '#4338ca'}
+                                        fillOpacity={0.7}
+                                        stroke={entry.risk >= 80 ? '#b91c1c' : entry.risk >= 40 ? '#b45309' : '#4338ca'}
                                     />
                                 ))}
                             </Scatter>
                         </ScatterChart>
                     </ResponsiveContainer>
                 </div>
-                <div className="mt-4 flex justify-center gap-6 text-[10px] font-mono text-slate-500 uppercase tracking-widest">
-                    <span className="flex items-center gap-2"><span className="w-2 h-2 bg-rose-500 rounded-full"></span> Critical Risk</span>
-                    <span className="flex items-center gap-2"><span className="w-2 h-2 bg-amber-500 rounded-full"></span> High Risk</span>
-                    <span className="flex items-center gap-2"><span className="w-2 h-2 bg-blue-500 rounded-full"></span> Medium Risk</span>
+                <div className="mt-4 flex justify-center gap-6 text-[10px] font-mono text-slate-400 uppercase tracking-widest">
+                    <span className="flex items-center gap-2"><span className="w-2 h-2 bg-rose-600 rounded-full"></span> Critical Risk</span>
+                    <span className="flex items-center gap-2"><span className="w-2 h-2 bg-amber-600 rounded-full"></span> High Risk</span>
+                    <span className="flex items-center gap-2"><span className="w-2 h-2 bg-indigo-600 rounded-full"></span> Medium Risk</span>
                 </div>
             </div>
         </div>

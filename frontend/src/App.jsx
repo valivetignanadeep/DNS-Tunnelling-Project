@@ -2,7 +2,8 @@ import React, { useState, Component } from 'react';
 import FileUpload from './components/FileUpload';
 import Dashboard from './components/Dashboard';
 import Sidebar from './components/Sidebar';
-import { ShieldCheck, AlertTriangle, RefreshCcw } from 'lucide-react';
+import LandingPage from './components/LandingPage';
+import { ShieldCheck, AlertTriangle, RefreshCcw, X } from 'lucide-react';
 
 // Robust Error Boundary to prevent white screen and show debug info
 class ErrorBoundary extends Component {
@@ -52,14 +53,16 @@ class ErrorBoundary extends Component {
 }
 
 function App() {
-  const [view, setView] = useState('upload'); // 'upload' | 'dashboard'
+  const [view, setView] = useState('landing'); // 'landing' | 'dashboard'
   const [results, setResults] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
 
   const handleAnalysisComplete = (data) => {
     // Ensure we have a valid object and results array before proceeding
     if (data && typeof data === 'object') {
       setResults(data);
+      setIsUploadOpen(false);
       setView('dashboard');
     } else {
       console.error("Invalid analysis data received:", data);
@@ -68,55 +71,52 @@ function App() {
 
   const handleReset = () => {
     setResults(null);
-    setView('upload');
+    setView('landing');
     setActiveTab('overview');
+    setIsUploadOpen(false);
   };
 
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-[#020617] font-sans text-slate-200">
-        {view === 'dashboard' && (
-          <Sidebar
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            onReset={handleReset}
-          />
+        {view === 'dashboard' ? (
+          <>
+            <Sidebar
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              onReset={handleReset}
+            />
+            <Dashboard results={results} activeTab={activeTab} />
+          </>
+        ) : (
+          <LandingPage onStartUpload={() => setIsUploadOpen(true)} />
         )}
 
-        {view === 'upload' ? (
-          <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden">
-            {/* Background Decorative Elements */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-600/5 rounded-full blur-[120px] pointer-events-none"></div>
+        {/* Upload Modal */}
+        {isUploadOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
+            <div className="absolute inset-0 bg-[#020617]/90 backdrop-blur-md" onClick={() => setIsUploadOpen(false)}></div>
 
-            {/* Subtle Grid Background */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(30,41,59,0.3)_1px,transparent_1px),linear-gradient(90deg,rgba(30,41,59,0.3)_1px,transparent_1px)] bg-[size:60px_60px] opacity-20 pointer-events-none"></div>
+            <div className="w-full max-w-2xl z-10 relative animate-in slide-in-from-bottom-8 duration-500">
+              <div className="enterprise-card p-2 rounded-[2.5rem] shadow-[0_40px_80px_-20px_rgba(37,99,235,0.2)]">
+                <div className="bg-[#020617] rounded-[2.25rem] p-8 border border-slate-800/50 relative">
+                  <button
+                    onClick={() => setIsUploadOpen(false)}
+                    className="absolute top-6 right-6 p-2 text-slate-500 hover:text-white transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
 
-            <div className="mb-10 text-center animate-in fade-in slide-in-from-top-4 duration-1000 relative z-10">
-              <div className="inline-flex items-center justify-center p-5 bg-blue-600/10 rounded-2xl mb-8 border border-blue-500/20 shadow-[0_0_20px_rgba(37,99,235,0.15)]">
-                <ShieldCheck className="w-14 h-14 text-blue-500" />
+                  <div className="mb-8">
+                    <h3 className="text-2xl font-bold text-white tracking-tight mb-2">Initialize Detection Audit</h3>
+                    <p className="text-slate-400 text-sm">Upload network logs (.pcap, .csv) for heuristic intelligence processing.</p>
+                  </div>
+
+                  <FileUpload onAnalysisComplete={handleAnalysisComplete} />
+                </div>
               </div>
-              <h1 className="text-5xl font-extrabold text-white mb-4 tracking-tighter">
-                DNS Tunnelling Detection<span className="text-blue-500"> of Packets</span>
-              </h1>
-              <p className="text-slate-400 max-w-md mx-auto text-lg font-medium leading-relaxed">
-              DNS Tunneling Detection for Covert Data Exfiltration
-
-              </p>
-            </div>
-
-            <div className="w-full max-w-xl z-10 p-1 bg-gradient-to-b from-slate-700/50 to-slate-800/50 rounded-2xl shadow-2xl border border-slate-700/30">
-              <FileUpload onAnalysisComplete={handleAnalysisComplete} />
-            </div>
-
-            <div className="mt-10 flex flex-col items-center gap-2 text-center opacity-40">
-              <p className="text-xs text-slate-500 uppercase tracking-[0.4em] font-bold">
-                Secure Environment • Log Analysis Active
-              </p>
-              <div className="h-px w-20 bg-gradient-to-r from-transparent via-slate-700 to-transparent"></div>
             </div>
           </div>
-        ) : (
-          <Dashboard results={results} activeTab={activeTab} />
         )}
       </div>
     </ErrorBoundary>

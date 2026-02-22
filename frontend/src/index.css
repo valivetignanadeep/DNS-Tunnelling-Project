@@ -1,50 +1,96 @@
 @import "tailwindcss";
 
 @theme {
-  --color-neon-pink: #ec4899;
-  --color-neon-cyan: #06b6d4;
-  --color-glass-white: rgba(255, 255, 255, 0.03);
+  --color-brand-blue: #4f46e5;
+  /* Deep Indigo */
+  --color-brand-slate: #0f172a;
+  /* Zinc Slate Base */
+  --color-brand-emerald: #059669;
+  /* Forest Emerald */
+  --color-brand-amber: #d97706;
+  /* Deep Amber */
+  --color-brand-crimson: #991b1b;
+  --color-brand-indigo: #4338ca;
+  --color-forest-emerald: #047857;
+  --color-intelligence-crimson: #b91c1c;
+  --color-deep-amber: #b45309;
+  --color-zinc-slate: #475569;
+  --color-parchment-bg: #fdfbf7;
+  --color-glass-white: rgba(255, 255, 255, 0.8);
 }
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
-    @apply bg-[#020617] text-slate-200 antialiased selection:bg-blue-500/30;
+    @apply bg-[var(--color-parchment-bg)] text-slate-900 font-sans antialiased selection:bg-indigo-100 selection:text-indigo-900;
     margin: 0;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
+    @apply tracking-tight text-slate-900;
   }
 }
 
 @layer components {
+  .enterprise-card {
+    @apply bg-white/90 backdrop-blur-md border border-slate-200/60 shadow-xl shadow-slate-200/50 transition-all duration-500 ring-1 ring-white/5;
+  }
+
+  .enterprise-card:hover {
+    @apply border-indigo-300/50 shadow-indigo-200/50;
+  }
+
+  .cyber-glow {
+    box-shadow: 0 0 20px rgba(67, 56, 202, 0.1);
+  }
+
   .glass-card {
-    @apply bg-slate-900/40 backdrop-blur-md border border-slate-800/50 shadow-xl transition-all duration-300;
+    @apply bg-white/70 backdrop-blur-lg border border-white/40 shadow-lg shadow-slate-200/30 transition-all duration-300;
   }
 
   .custom-scrollbar::-webkit-scrollbar {
-    width: 4px;
+    width: 6px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
-    @apply bg-transparent;
+    @apply bg-slate-50;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-slate-800 rounded-full hover:bg-slate-700;
+    @apply bg-slate-300 rounded-full hover:bg-slate-400 transition-colors;
   }
 }
 
-/* Animations from previous builds */
-@keyframes pulse-slow {
+/* Sophisticated Background Mesh */
+.bg-mesh {
+  @apply absolute inset-0 -z-10 overflow-hidden pointer-events-none;
+  background: radial-gradient(circle at 50% -20%, #eff6ff 0%, transparent 50%),
+    radial-gradient(circle at 100% 100%, #fef3c7 0%, transparent 50%),
+    radial-gradient(circle at 0% 100%, #ecfdf5 0%, transparent 50%);
+  opacity: 0.6;
+  z-index: -1;
+}
+
+@keyframes float {
 
   0%,
   100% {
-    opacity: 0.5;
+    transform: translateY(0px);
   }
 
   50% {
-    opacity: 0.8;
+    transform: translateY(-10px);
   }
 }
 
-.animate-pulse-slow {
-  animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+.animate-float {
+  animation: float 6s ease-in-out infinite;
 }

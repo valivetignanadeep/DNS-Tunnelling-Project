@@ -36,7 +36,7 @@ const FileUpload = ({ onAnalysisComplete }) => {
   };
 
   return (
-    <div className="p-8 flex flex-col items-center justify-center border-2 border-dashed border-slate-700 rounded-xl bg-slate-800/50 hover:bg-slate-800 transition-all group">
+    <div className="p-10 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-[2rem] bg-slate-50/50 hover:bg-white hover:border-indigo-300 transition-all group shadow-sm">
       <input
         type="file"
         id="file-upload"
@@ -47,28 +47,28 @@ const FileUpload = ({ onAnalysisComplete }) => {
 
       <label
         htmlFor="file-upload"
-        className="cursor-pointer flex flex-col items-center gap-4 w-full"
+        className="cursor-pointer flex flex-col items-center gap-6 w-full"
       >
-        <div className="p-4 bg-blue-500/10 rounded-full group-hover:bg-blue-500/20 transition-all">
+        <div className="p-6 bg-indigo-50 rounded-2xl group-hover:bg-indigo-100 transition-all shadow-inner">
           {isUploading ? (
-            <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
+            <Loader2 className="w-12 h-12 text-indigo-600 animate-spin" />
           ) : (
-            <Upload className="w-10 h-10 text-blue-500" />
+            <Upload className="w-12 h-12 text-indigo-600" />
           )}
         </div>
 
         <div className="text-center">
-          <p className="text-white font-semibold text-lg">
-            {isUploading ? "Analyzing Traffic..." : "Upload Traffic Data"}
+          <p className="text-slate-900 font-bold text-xl tracking-tight">
+            {isUploading ? "Detection Analysis in Progress..." : "Upload Intelligence Payload"}
           </p>
-          <p className="text-slate-400 text-sm mt-1">
-            Support for .pcap, .pcapng files
+          <p className="text-slate-400 text-xs mt-2 uppercase tracking-widest font-bold">
+            Support for .pcap, .pcapng detection
           </p>
         </div>
       </label>
 
       {error && (
-        <div className="mt-4 flex items-center gap-2 text-red-400 text-sm bg-red-400/10 p-3 rounded-lg border border-red-400/20">
+        <div className="mt-6 flex items-center gap-3 text-rose-700 text-xs bg-rose-50 p-4 rounded-xl border border-rose-100 font-bold">
           <AlertCircle className="w-4 h-4" />
           <span>{error}</span>
         </div>

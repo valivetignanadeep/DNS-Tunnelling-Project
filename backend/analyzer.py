@@ -54,11 +54,15 @@ class DNSAnalyzer:
         ]
 
         # Prepare All Queries Log
+        df['entropy'] = df['query'].apply(lambda x: self.calculate_entropy(x.split('.')[0]))
+        df['classification'] = df['entropy'].apply(lambda e: "HIGH" if e >= 4.5 else "AVG" if e >= 3.0 else "LOW")
+        
         # Drop time_bin as Timestamps are not JSON serializable
         df_for_log = df.drop(columns=['time_bin'], errors='ignore')
         all_queries = df_for_log.to_dict('records')
         for q in all_queries:
             q['timestamp'] = float(q['timestamp'])
+            q['entropy'] = round(q['entropy'], 2)
 
         # Return both anomalies and aggregate stats
         return {

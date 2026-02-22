@@ -4,7 +4,7 @@ import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend
 } from 'recharts';
 
-const COLORS = ['#10b981', '#f59e0b', '#ef4444']; // Emerald, Amber, Rose
+const COLORS = ['#059669', '#d97706', '#991b1b']; // Forest Emerald, Deep Amber, Intelligence Crimson
 
 const Charts = ({ data }) => {
     const total = data?.totalQueries || 0;
@@ -51,8 +51,8 @@ const Charts = ({ data }) => {
                             ))}
                         </Pie>
                         <Tooltip
-                            contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px' }}
-                            itemStyle={{ fontSize: '12px' }}
+                            contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
+                            itemStyle={{ fontSize: '12px', color: '#1e293b' }}
                         />
                     </PieChart>
                 </ResponsiveContainer>
@@ -65,26 +65,27 @@ const Charts = ({ data }) => {
             <div className="h-40 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={kpiData} margin={{ left: -20 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                         <XAxis
                             dataKey="name"
-                            stroke="#475569"
+                            stroke="#94a3b8"
                             tick={{ fontSize: 10 }}
                             axisLine={false}
                             tickLine={false}
                         />
                         <YAxis
-                            stroke="#475569"
+                            stroke="#94a3b8"
                             tick={{ fontSize: 10 }}
                             axisLine={false}
                             tickLine={false}
                         />
                         <Tooltip
-                            contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px' }}
+                            contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
+                            itemStyle={{ color: '#1e293b' }}
                         />
                         <Bar
                             dataKey="count"
-                            fill="#3b82f6"
+                            fill="#4338ca"
                             radius={[4, 4, 0, 0]}
                             barSize={24}
                         />
