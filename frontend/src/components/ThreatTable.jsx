@@ -1,7 +1,7 @@
 import React from "react";
 import { ShieldCheck } from 'lucide-react';
 
-const ThreatTable = ({ data }) => {
+const ThreatTable = ({ data, onRowClick }) => {
     return (
         <div className="bg-white p-6 rounded-2xl border border-slate-200 overflow-hidden shadow-md">
             <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center justify-between">
@@ -29,7 +29,12 @@ const ThreatTable = ({ data }) => {
                     <tbody className="divide-y divide-slate-50">
                         {data && data.length > 0 ? (
                             data.map((row, index) => (
-                                <tr key={index} className="hover:bg-slate-50 transition-colors group">
+                                <tr 
+                                    key={index} 
+                                    onClick={() => onRowClick && onRowClick(row)}
+                                    className="hover:bg-indigo-50/50 transition-colors group cursor-pointer"
+                                    title="Click to Decode Threat Intelligence"
+                                >
                                     <td className="py-4 font-mono text-sm text-indigo-700 font-bold pl-2">{row.src_ip}</td>
                                     <td className="py-4">
                                         <div className="flex flex-col">

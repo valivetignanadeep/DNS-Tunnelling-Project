@@ -1,7 +1,18 @@
-import React from 'react';
-import { LayoutDashboard, FileText, Activity, Settings, Database, ShieldAlert, BookOpen, Info, BrainCircuit } from 'lucide-react';
+import React, { useState } from 'react';
+import { LayoutDashboard, FileText, Activity, Settings, Database, ShieldAlert, BookOpen, Info, BrainCircuit, Wifi, Play, Square } from 'lucide-react';
 
-const Sidebar = ({ activeTab, setActiveTab, onReset }) => {
+const Sidebar = ({ activeTab, setActiveTab, onReset, detectionMode, setDetectionMode }) => {
+    const [liveActive, setLiveActive] = useState(true);
+
+    const toggleLive = async () => {
+        const nextState = !liveActive;
+        setLiveActive(nextState);
+        try {
+            await fetch(`http://127.0.0.1:5000/api/live/${nextState ? 'start' : 'stop'}`, { method: 'POST' });
+        } catch (err) {
+            console.error("Failed to toggle live sniffer:", err);
+        }
+    };
     const menuItems = [
         { id: 'overview', label: 'Security Overview', icon: LayoutDashboard },
         { id: 'analysis', label: 'Lexical Analysis', icon: Activity },
@@ -57,8 +68,61 @@ const Sidebar = ({ activeTab, setActiveTab, onReset }) => {
             </nav>
 
             {/* System Status & Actions */}
-            <div className="p-6 border-t border-slate-100 bg-slate-50/30 backdrop-blur-sm">
-                <div className="glass-card rounded-xl p-4 mb-4 border-slate-200 shadow-sm">
+            <div className="p-6 border-t border-slate-100 bg-slate-50/30 backdrop-blur-sm space-y-4">
+                {detectionMode === 'live' ? (
+                    <div className="glass-card rounded-xl p-4 border-slate-200 shadow-sm bg-white">
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                                <span className={`flex h-2.5 w-2.5 relative`}>
+                                    {liveActive ? (
+                                        <>
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                                        </>
+                                    ) : (
+                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-slate-300"></span>
+                                    )}
+                                </span>
+                                <span className="text-[10px] font-bold text-slate-800 uppercase tracking-wider">
+                                    {liveActive ? "Live Sniffer: ON" : "Live Sniffer: PAUSED"}
+                                </span>
+                            </div>
+                            <button
+                                onClick={toggleLive}
+                                className={`p-1.5 rounded-lg border transition-all ${
+                                    liveActive 
+                                        ? 'bg-rose-50 border-rose-100 text-rose-600 hover:bg-rose-100' 
+                                        : 'bg-emerald-50 border-emerald-100 text-emerald-600 hover:bg-emerald-100'
+                                }`}
+                                title={liveActive ? "Pause Sniffer" : "Resume Sniffer"}
+                            >
+                                {liveActive ? <Square size={10} fill="currentColor" /> : <Play size={10} fill="currentColor" />}
+                            </button>
+                        </div>
+                        <div className="flex flex-col gap-1 text-[9px] font-mono text-slate-400 border-t border-slate-100 pt-2">
+                            <div className="flex justify-between">
+                                <span>Engine status:</span>
+                                <span className="text-indigo-600 font-bold">MONITORING</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span>Source:</span>
+                                <span className="text-slate-600 uppercase font-bold">Local DNS (Port 53)</span>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="glass-card rounded-xl p-4 border-slate-200 shadow-sm bg-white">
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                            <span className="text-[10px] font-bold text-slate-700 uppercase tracking-widest">STATIC AUDIT MODE</span>
+                        </div>
+                        <p className="text-[9px] text-slate-400 font-mono leading-relaxed">
+                            Analyzing historical PCAP logs. Exit dashboard to initialize live networks.
+                        </p>
+                    </div>
+                )}
+
+                <div className="glass-card rounded-xl p-4 border-slate-200 shadow-sm bg-white">
                     <div className="flex items-center gap-3 mb-2">
                         <div className="p-1.5 bg-emerald-50 rounded-lg">
                             <Info size={12} className="text-emerald-600" />

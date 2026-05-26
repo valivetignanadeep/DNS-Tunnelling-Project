@@ -57,10 +57,11 @@ function App() {
   const [results, setResults] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [detectionMode, setDetectionMode] = useState('pcap'); // 'pcap' | 'live'
 
   const handleAnalysisComplete = (data) => {
-    // Ensure we have a valid object and results array before proceeding
     if (data && typeof data === 'object') {
+      setDetectionMode('pcap');
       setResults(data);
       setIsUploadOpen(false);
       setView('dashboard');
@@ -69,11 +70,44 @@ function App() {
     }
   };
 
-  const handleReset = () => {
+  const handleStartLive = async () => {
+    setDetectionMode('live');
+    setResults({
+      totalQueries: 0,
+      suspicious: 0,
+      threats: 0,
+      pps: 0.0,
+      totalBytes: 0,
+      activeClientIPs: 0,
+      adapterName: "Initializing...",
+      volumeTrend: [{"time": "00:00:00", "traffic": 0}],
+      results: [],
+      allQueries: [],
+      logs: ["Initializing live sniffer interface..."],
+      distribution: { critical: 0, high: 0, medium: 0 }
+    });
+    setView('dashboard');
+    
+    try {
+      await fetch('http://127.0.0.1:5000/api/live/start', { method: 'POST' });
+    } catch (err) {
+      console.error("Failed to trigger live capture:", err);
+    }
+  };
+
+  const handleReset = async () => {
+    if (detectionMode === 'live') {
+      try {
+        await fetch('http://127.0.0.1:5000/api/live/stop', { method: 'POST' });
+      } catch (err) {
+        console.error("Failed to cease live capture:", err);
+      }
+    }
     setResults(null);
     setView('landing');
     setActiveTab('overview');
     setIsUploadOpen(false);
+    setDetectionMode('pcap');
   };
 
   return (
@@ -85,11 +119,18 @@ function App() {
               activeTab={activeTab}
               setActiveTab={setActiveTab}
               onReset={handleReset}
+              detectionMode={detectionMode}
+              setDetectionMode={setDetectionMode}
             />
-            <Dashboard results={results} activeTab={activeTab} />
+            <Dashboard 
+              results={results} 
+              setResults={setResults}
+              activeTab={activeTab} 
+              detectionMode={detectionMode}
+            />
           </>
         ) : (
-          <LandingPage onStartUpload={() => setIsUploadOpen(true)} />
+          <LandingPage onStartUpload={() => setIsUploadOpen(true)} onStartLive={handleStartLive} />
         )}
 
         {/* Upload Modal */}

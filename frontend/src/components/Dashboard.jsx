@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Charts from "./Charts";
 import ThreatTable from "./ThreatTable";
 import AnomalyCharts from "./AnomalyCharts";
@@ -7,9 +7,37 @@ import TerminalConsole from "./TerminalConsole";
 import PacketLogTable from "./PacketLogTable";
 import EngineDocs from "./EngineDocs";
 import EntropyTable from "./EntropyTable";
+import LiveExplainCard from "./LiveExplainCard";
 import { ShieldCheck, Activity, ShieldAlert, Skull, BrainCircuit, Database, Download, HelpCircle, ArrowUpRight } from "lucide-react";
 
-const Dashboard = ({ results, activeTab }) => {
+const Dashboard = ({ results, setResults, activeTab, detectionMode }) => {
+    const [selectedThreat, setSelectedThreat] = useState(null);
+
+    useEffect(() => {
+        if (detectionMode !== 'live' || !setResults) return;
+
+        let isMounted = true;
+        
+        const fetchLiveStatus = async () => {
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/live/status');
+                const data = await response.json();
+                if (isMounted) {
+                    setResults(data);
+                }
+            } catch (err) {
+                console.error("Failed to fetch live stats:", err);
+            }
+        };
+
+        fetchLiveStatus();
+        const interval = setInterval(fetchLiveStatus, 1500);
+
+        return () => {
+            isMounted = false;
+            clearInterval(interval);
+        };
+    }, [detectionMode, setResults]);
     const downloadCSV = () => {
         if (!results || !results.allQueries) return;
 
@@ -113,9 +141,11 @@ const Dashboard = ({ results, activeTab }) => {
                                 <p className="text-5xl font-bold text-slate-900 tracking-tighter group-hover:text-indigo-600 transition-all">
                                     {data?.totalQueries?.toLocaleString() || 0}
                                 </p>
-                                <div className="mt-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                                    <HelpCircle size={10} className="text-indigo-600" />
-                                    <span className="text-[9px] text-slate-400 italic">Total DNS packets parsed in the current session.</span>
+                                <div className="mt-4 flex items-center gap-2 opacity-100 transition-opacity duration-500">
+                                    <HelpCircle size={10} className="text-indigo-600 animate-pulse" />
+                                    <span className="text-[9px] text-indigo-600 font-mono font-bold">
+                                        {detectionMode === 'live' ? `[THROUGHPUT: ${data?.pps || 0.0} PPS]` : "Total DNS packets parsed in the current session."}
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -133,9 +163,11 @@ const Dashboard = ({ results, activeTab }) => {
                                 <p className="text-5xl font-bold text-white tracking-tighter group-hover:text-amber-400 transition-all">
                                     {data?.suspicious?.toLocaleString() || 0}
                                 </p>
-                                <div className="mt-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                                    <HelpCircle size={10} className="text-amber-500" />
-                                    <span className="text-[9px] text-slate-500 italic">Deviations from normal entropy/structure baseline.</span>
+                                <div className="mt-4 flex items-center gap-2 opacity-100 transition-opacity duration-500">
+                                    <HelpCircle size={10} className="text-amber-500 animate-pulse" />
+                                    <span className="text-[9px] text-amber-600 font-mono font-bold">
+                                        {detectionMode === 'live' ? `[ACTIVE SOURCE IPS: ${data?.activeClientIPs || 0}]` : "Deviations from normal entropy/structure baseline."}
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -153,9 +185,11 @@ const Dashboard = ({ results, activeTab }) => {
                                 <p className="text-5xl font-bold text-slate-900 tracking-tighter group-hover:text-rose-600 transition-all">
                                     {data?.threats?.toLocaleString() || 0}
                                 </p>
-                                <div className="mt-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                                    <HelpCircle size={10} className="text-rose-600" />
-                                    <span className="text-[9px] text-slate-400 italic">Confirmed malicious tunneling fingerprints.</span>
+                                <div className="mt-4 flex items-center gap-2 opacity-100 transition-opacity duration-500">
+                                    <HelpCircle size={10} className="text-rose-600 animate-pulse" />
+                                    <span className="text-[9px] text-rose-600 font-mono font-bold">
+                                        {detectionMode === 'live' ? `[ADAPTER: ${data?.adapterName || 'Simulation'}]` : "Confirmed malicious tunneling fingerprints."}
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -230,7 +264,7 @@ const Dashboard = ({ results, activeTab }) => {
                         </div>
                     </header>
                     <div className="enterprise-card rounded-3xl p-2 bg-[#020617] border-slate-800/60 overflow-hidden shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)]">
-                        <ThreatTable data={anomalies} />
+                        <ThreatTable data={anomalies} onRowClick={(threat) => setSelectedThreat(threat)} />
                     </div>
                 </div>
             )}
@@ -277,6 +311,9 @@ const Dashboard = ({ results, activeTab }) => {
                         </div>
                     </div>
                 </div>
+            )}
+            {selectedThreat && (
+                <LiveExplainCard threat={selectedThreat} onClose={() => setSelectedThreat(null)} />
             )}
         </div>
     );
