@@ -68,6 +68,7 @@ function App() {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [detectionMode, setDetectionMode] = useState('pcap'); // 'pcap' | 'live'
   const [isMonitorOpen, setIsMonitorOpen] = useState(false);
+  const [liveActive, setLiveActive] = useState(true); // Single source of truth for live sniffer stream
 
   const handleAnalysisComplete = (data) => {
     if (data && typeof data === 'object') {
@@ -80,8 +81,18 @@ function App() {
     }
   };
 
+  const handleToggleLive = async (nextState) => {
+    setLiveActive(nextState);
+    try {
+      await fetch(getApiUrl(`/api/live/${nextState ? 'start' : 'stop'}`), { method: 'POST' });
+    } catch (err) {
+      console.error("Failed to toggle live capture sniffer:", err);
+    }
+  };
+
   const handleStartLive = async () => {
     setDetectionMode('live');
+    setLiveActive(true); // Always start in active sniffer state
     setResults({
       totalQueries: 0,
       suspicious: 0,
@@ -132,6 +143,8 @@ function App() {
               onReset={handleReset}
               detectionMode={detectionMode}
               setDetectionMode={setDetectionMode}
+              liveActive={liveActive}
+              onToggleLive={handleToggleLive}
             />
             <Dashboard 
               results={results} 
@@ -140,11 +153,14 @@ function App() {
               detectionMode={detectionMode}
               isMonitorOpen={isMonitorOpen}
               setIsMonitorOpen={setIsMonitorOpen}
+              liveActive={liveActive}
             />
             <PacketMonitorSidebar
               isOpen={isMonitorOpen}
               onClose={() => setIsMonitorOpen(false)}
               liveData={results}
+              liveActive={liveActive}
+              onToggleLive={handleToggleLive}
             />
           </>
         ) : (

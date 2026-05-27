@@ -1,16 +1,10 @@
 import React, { useState } from 'react';
 import { LayoutDashboard, FileText, Activity, Settings, Database, ShieldAlert, BookOpen, Info, BrainCircuit, Wifi, Play, Square } from 'lucide-react';
 
-const Sidebar = ({ activeTab, setActiveTab, onReset, detectionMode, setDetectionMode }) => {
-    const [liveActive, setLiveActive] = useState(true);
-
-    const toggleLive = async () => {
-        const nextState = !liveActive;
-        setLiveActive(nextState);
-        try {
-            await fetch(`http://127.0.0.1:5000/api/live/${nextState ? 'start' : 'stop'}`, { method: 'POST' });
-        } catch (err) {
-            console.error("Failed to toggle live sniffer:", err);
+const Sidebar = ({ activeTab, setActiveTab, onReset, detectionMode, setDetectionMode, liveActive, onToggleLive }) => {
+    const toggleLive = () => {
+        if (onToggleLive) {
+            onToggleLive(!liveActive);
         }
     };
     const menuItems = [

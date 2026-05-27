@@ -18,12 +18,12 @@ const getApiUrl = (endpoint) => {
   return `${base}${endpoint}`;
 };
 
-const Dashboard = ({ results, setResults, activeTab, detectionMode, isMonitorOpen, setIsMonitorOpen }) => {
+const Dashboard = ({ results, setResults, activeTab, detectionMode, isMonitorOpen, setIsMonitorOpen, liveActive }) => {
     const [selectedThreat, setSelectedThreat] = useState(null);
     const [isDemoSimActive, setIsDemoSimActive] = useState(false);
 
     useEffect(() => {
-        if (detectionMode !== 'live' || !setResults) return;
+        if (detectionMode !== 'live' || !setResults || !liveActive) return;
 
         let isMounted = true;
         let simInterval = null;
@@ -292,9 +292,11 @@ const Dashboard = ({ results, setResults, activeTab, detectionMode, isMonitorOpe
             }
         };
 
-        fetchLiveStatus();
+        if (liveActive) {
+            fetchLiveStatus();
+        }
         const pollInterval = setInterval(() => {
-            if (!isDemoSimActive) {
+            if (!isDemoSimActive && liveActive) {
                 fetchLiveStatus();
             }
         }, 1500);
@@ -304,7 +306,7 @@ const Dashboard = ({ results, setResults, activeTab, detectionMode, isMonitorOpe
             clearInterval(pollInterval);
             if (simInterval) clearInterval(simInterval);
         };
-    }, [detectionMode, setResults, isDemoSimActive]);
+    }, [detectionMode, setResults, isDemoSimActive, liveActive]);
 
     const downloadCSV = () => {
         if (!results || !results.allQueries) return;

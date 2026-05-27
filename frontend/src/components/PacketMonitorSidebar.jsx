@@ -82,8 +82,7 @@ const SectionHeader = ({ icon: Icon, title, badge, badgeColor = 'bg-teal-100 tex
 // ────────────────────────────────────────────────
 // 1. Packet Console Panel (Live CLI Stream)
 // ────────────────────────────────────────────────
-const ConsolePanel = ({ queries }) => {
-    const [isPaused, setIsPaused] = useState(false);
+const ConsolePanel = ({ queries, liveActive, onToggleLive }) => {
     const [filterClass, setFilterClass] = useState('ALL');
     const [bufferedPackets, setBufferedPackets] = useState([]);
     const terminalEndRef = useRef(null);
@@ -91,19 +90,19 @@ const ConsolePanel = ({ queries }) => {
     // Sync packets but respect play/pause status
     useEffect(() => {
         if (!queries) return;
-        if (!isPaused) {
+        if (liveActive) {
             // queries is stored newest first, so we reverse it to display chronologically in console
             const reversed = [...queries].reverse();
             setBufferedPackets(reversed);
         }
-    }, [queries, isPaused]);
+    }, [queries, liveActive]);
 
     // Auto scroll to bottom of terminal
     useEffect(() => {
-        if (!isPaused) {
+        if (liveActive) {
             terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
         }
-    }, [bufferedPackets, isPaused]);
+    }, [bufferedPackets, liveActive]);
 
     const handleClear = () => {
         setBufferedPackets([]);
@@ -129,16 +128,16 @@ const ConsolePanel = ({ queries }) => {
                 </div>
                 <div className="flex items-center gap-2.5 text-[8px] text-stone-400">
                     <button 
-                        onClick={() => setIsPaused(!isPaused)} 
+                        onClick={() => onToggleLive(!liveActive)} 
                         className={`flex items-center gap-1 px-1.5 py-0.5 rounded border transition-colors ${
-                            isPaused 
+                            !liveActive 
                             ? 'bg-amber-600/20 border-amber-600/30 text-amber-400 hover:bg-amber-600/30' 
                             : 'bg-stone-800 border-stone-700 hover:bg-stone-700 text-stone-300'
                         }`}
-                        title={isPaused ? "Resume Live Sniffer Console" : "Pause Live Sniffer Console"}
+                        title={!liveActive ? "Resume Live Sniffer Console" : "Pause Live Sniffer Console"}
                     >
-                        {isPaused ? <Play size={8} /> : <Pause size={8} />}
-                        {isPaused ? "RESUME" : "PAUSE"}
+                        {!liveActive ? <Play size={8} /> : <Pause size={8} />}
+                        {!liveActive ? "RESUME" : "PAUSE"}
                     </button>
                     <button 
                         onClick={handleClear} 
@@ -496,7 +495,7 @@ const TransmittingPanel = ({ stats, logs }) => {
 // ────────────────────────────────────────────────
 // Main Packet Monitor Sidebar
 // ────────────────────────────────────────────────
-const PacketMonitorSidebar = ({ isOpen, onClose, liveData }) => {
+const PacketMonitorSidebar = ({ isOpen, onClose, liveData, liveActive, onToggleLive }) => {
     const [activePanel, setActivePanel] = useState('console'); // Default to console stream!
 
     const panels = [
@@ -571,7 +570,13 @@ const PacketMonitorSidebar = ({ isOpen, onClose, liveData }) => {
 
                 {/* Panel content area */}
                 <div className="flex-1 overflow-hidden">
-                    {activePanel === 'console'      && <ConsolePanel   queries={queries} />}
+                    {activePanel === 'console' && (
+                        <ConsolePanel 
+                            queries={queries} 
+                            liveActive={liveActive} 
+                            onToggleLive={onToggleLive} 
+                        />
+                    )}
                     {activePanel === 'parsing'      && <ParsingPanel   queries={queries} />}
                     {activePanel === 'detection'    && <DetectionPanel anomalies={anomalies} distribution={dist} />}
                     {activePanel === 'transmitting' && <TransmittingPanel stats={stats} logs={logs} />}
