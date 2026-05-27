@@ -4,7 +4,7 @@ import Dashboard from './components/Dashboard';
 import Sidebar from './components/Sidebar';
 import LandingPage from './components/LandingPage';
 import PacketMonitorSidebar from './components/PacketMonitorSidebar';
-import { ShieldCheck, AlertTriangle, RefreshCcw, X } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, RefreshCcw, X, Cpu } from 'lucide-react';
 
 // Dynamic API Base URL resolver for Vercel/Local dual-routing
 export const getApiUrl = (endpoint) => {
@@ -69,16 +69,24 @@ function App() {
   const [detectionMode, setDetectionMode] = useState('pcap'); // 'pcap' | 'live'
   const [isMonitorOpen, setIsMonitorOpen] = useState(false);
   const [liveActive, setLiveActive] = useState(true); // Single source of truth for live sniffer stream
+  const [isBlocked, setIsBlocked] = useState(false); // Tab block status lock
 
-  // Unique tab identifier to manage Broadcast Channel leadership election
-  const tabId = useMemo(() => Math.random().toString(36).substring(2, 11), []);
+  // Unique tab identifier to manage Broadcast Channel session locks
+  const tabId = useMemo(() => `node-${Math.random().toString(36).substring(2, 8).toUpperCase()}`, []);
   
   // Establish the BroadcastChannel on origin scope
   const syncChannel = useMemo(() => new BroadcastChannel('dns_detector_tab_sync'), []);
 
-  // Multi-tab message broker hook
+  // Multi-tab message broker and session locker hook
   useEffect(() => {
     let isMounted = true;
+
+    // Check if another tab is already active on load
+    const activeTabId = localStorage.getItem('dns_active_tab_id');
+    const lastHb = parseInt(localStorage.getItem('dns_active_tab_heartbeat') || "0");
+    if (activeTabId && activeTabId !== tabId && Date.now() - lastHb < 2500) {
+      setIsBlocked(true);
+    }
 
     const handleSyncMessage = (event) => {
       if (!isMounted) return;
@@ -88,10 +96,14 @@ function App() {
       if (senderId === tabId) return;
 
       switch (type) {
+        case 'FORCE_LOCK':
+          // Another tab has claimed session control, suspend this tab instantly
+          setIsBlocked(true);
+          break;
+
         case 'STATE_REQUEST':
-          // If we are currently running a session, respond with our active state
-          const isLeader = localStorage.getItem('dns_leader_tab') === tabId;
-          if (isLeader || results) {
+          // If we are currently the active unlocked session, respond with our active state
+          if (!isBlocked && results) {
             syncChannel.postMessage({
               type: 'STATE_RESPONSE',
               senderId: tabId,
@@ -108,9 +120,6 @@ function App() {
           break;
 
         case 'STATE_RESPONSE':
-          // Elect the responder as the leader tab
-          localStorage.setItem('dns_leader_tab', senderId);
-          localStorage.setItem('dns_leader_heartbeat', Date.now().toString());
           // Sync state values
           setResults(payload.results);
           setView(payload.view);
@@ -122,54 +131,65 @@ function App() {
 
         case 'STATE_UPDATE':
           // Dynamically synchronize live metrics, logs, trend charts, and state
-          setResults(payload.results);
-          setView(payload.view);
-          setActiveTab(payload.activeTab);
-          setDetectionMode(payload.detectionMode);
-          setIsMonitorOpen(payload.isMonitorOpen);
-          setLiveActive(payload.liveActive);
+          if (!isBlocked) {
+            setResults(payload.results);
+            setView(payload.view);
+            setActiveTab(payload.activeTab);
+            setDetectionMode(payload.detectionMode);
+            setIsMonitorOpen(payload.isMonitorOpen);
+            setLiveActive(payload.liveActive);
+          }
           break;
 
         case 'ACTION_NAVIGATE':
-          // Sync navigation tabs
-          setView(payload.view);
-          setActiveTab(payload.activeTab);
+          if (!isBlocked) {
+            setView(payload.view);
+            setActiveTab(payload.activeTab);
+          }
           break;
 
         case 'ACTION_MONITOR_TOGGLE':
-          // Sync monitor sidebar visibility
-          setIsMonitorOpen(payload.isMonitorOpen);
+          if (!isBlocked) {
+            setIsMonitorOpen(payload.isMonitorOpen);
+          }
           break;
 
         case 'ACTION_RESET':
-          // Sync session resets
-          setResults(null);
-          setView('landing');
-          setActiveTab('overview');
-          setIsUploadOpen(false);
-          setDetectionMode('pcap');
-          setIsMonitorOpen(false);
+          if (!isBlocked) {
+            setResults(null);
+            setView('landing');
+            setActiveTab('overview');
+            setIsUploadOpen(false);
+            setDetectionMode('pcap');
+            setIsMonitorOpen(false);
+          }
           break;
       }
     };
 
     syncChannel.addEventListener('message', handleSyncMessage);
 
-    // Prompt active tabs to synchronize state upon load
-    syncChannel.postMessage({ type: 'STATE_REQUEST', senderId: tabId });
+    // Request active tab state sync upon load
+    if (activeTabId && activeTabId !== tabId && Date.now() - lastHb < 2500) {
+      // Do not sync if blocked
+    } else {
+      syncChannel.postMessage({ type: 'STATE_REQUEST', senderId: tabId });
+    }
 
-    // Periodic heartbeat to maintain leadership registry
+    // Periodic heartbeat to maintain leadership and session locks
     const heartbeatInterval = setInterval(() => {
-      const currentLeader = localStorage.getItem('dns_leader_tab');
-      if (currentLeader === tabId || !currentLeader) {
-        localStorage.setItem('dns_leader_tab', tabId);
-        localStorage.setItem('dns_leader_heartbeat', Date.now().toString());
+      if (!isBlocked) {
+        localStorage.setItem('dns_active_tab_id', tabId);
+        localStorage.setItem('dns_active_tab_heartbeat', Date.now().toString());
       } else {
-        // If leader heartbeat is lost (older than 2.5 seconds), assume leadership
-        const hb = parseInt(localStorage.getItem('dns_leader_heartbeat') || "0");
-        if (Date.now() - hb > 2500) {
-          localStorage.setItem('dns_leader_tab', tabId);
-          localStorage.setItem('dns_leader_heartbeat', Date.now().toString());
+        // If we are currently blocked, verify if the session-claimed tab is still alive
+        const currentActive = localStorage.getItem('dns_active_tab_id');
+        const hb = parseInt(localStorage.getItem('dns_active_tab_heartbeat') || "0");
+        if ((!currentActive || Date.now() - hb > 2500) && isMounted) {
+          // Heartbeat is lost, unlock this tab and claim session control
+          setIsBlocked(false);
+          localStorage.setItem('dns_active_tab_id', tabId);
+          localStorage.setItem('dns_active_tab_heartbeat', Date.now().toString());
         }
       }
     }, 1000);
@@ -179,12 +199,11 @@ function App() {
       syncChannel.removeEventListener('message', handleSyncMessage);
       clearInterval(heartbeatInterval);
     };
-  }, [tabId, syncChannel, results, view, activeTab, detectionMode, isMonitorOpen, liveActive]);
+  }, [tabId, syncChannel, results, view, activeTab, detectionMode, isMonitorOpen, liveActive, isBlocked]);
 
   // Synchronize state updates triggered by the active Leader tab
   useEffect(() => {
-    const isLeader = localStorage.getItem('dns_leader_tab') === tabId;
-    if (isLeader && results) {
+    if (!isBlocked && results) {
       syncChannel.postMessage({
         type: 'STATE_UPDATE',
         senderId: tabId,
@@ -198,7 +217,22 @@ function App() {
         }
       });
     }
-  }, [results, view, activeTab, detectionMode, isMonitorOpen, liveActive, tabId, syncChannel]);
+  }, [results, view, activeTab, detectionMode, isMonitorOpen, liveActive, tabId, syncChannel, isBlocked]);
+
+  const claimSession = () => {
+    setIsBlocked(false);
+    localStorage.setItem('dns_active_tab_id', tabId);
+    localStorage.setItem('dns_active_tab_heartbeat', Date.now().toString());
+    
+    // Broadcast FORCE_LOCK to terminate concurrent browser windows
+    syncChannel.postMessage({
+      type: 'FORCE_LOCK',
+      senderId: tabId
+    });
+
+    // Prompt active tabs to synchronize state
+    syncChannel.postMessage({ type: 'STATE_REQUEST', senderId: tabId });
+  };
 
   const handleAnalysisComplete = (data) => {
     if (data && typeof data === 'object') {
@@ -252,7 +286,7 @@ function App() {
   const handleStartLive = async () => {
     setDetectionMode('live');
     setLiveActive(true); // Always start in active sniffer state
-    localStorage.setItem('dns_leader_tab', tabId); // Claim leadership
+    localStorage.setItem('dns_active_tab_id', tabId); // Claim active lock
     
     const initialLiveState = {
       totalQueries: 0,
@@ -310,8 +344,8 @@ function App() {
     setDetectionMode('pcap');
     setIsMonitorOpen(false);
     
-    // Clear leadership key
-    localStorage.removeItem('dns_leader_tab');
+    // Clear lock keys
+    localStorage.removeItem('dns_active_tab_id');
 
     // Broadcast reset action to all open windows
     syncChannel.postMessage({
@@ -341,6 +375,58 @@ function App() {
       payload: { isMonitorOpen: isOpen }
     });
   };
+
+  if (isBlocked) {
+    return (
+      <div className="min-h-screen bg-[#fdfbf7] flex flex-col items-center justify-center p-6 font-sans text-stone-850 relative select-none">
+        {/* Background Grid Mesh */}
+        <div className="absolute inset-0 bg-[radial-gradient(#e2e0d9_1.2px,transparent_1.2px)] [background-size:32px_32px] opacity-45 z-0"></div>
+
+        <div className="w-full max-w-md bg-white border border-stone-200/80 p-8 rounded-[2.5rem] shadow-xl text-center flex flex-col items-center gap-6 relative z-10 animate-in fade-in zoom-in-95 duration-500">
+          <div className="w-16 h-16 bg-rose-50 border border-rose-100 rounded-2xl flex items-center justify-center shadow-sm animate-pulse">
+            <AlertTriangle className="w-8 h-8 text-rose-500" />
+          </div>
+
+          <div className="space-y-1">
+            <h1 className="text-2xl font-black text-stone-900 tracking-tighter uppercase">Session Lock Active</h1>
+            <p className="text-stone-400 font-mono text-[9px] uppercase tracking-widest leading-none">NET-GUARD.OPS // PROTOCOL_SHIELD</p>
+          </div>
+
+          <div className="h-px w-full bg-stone-100"></div>
+
+          <p className="text-stone-600 text-xs font-medium leading-relaxed">
+            Security policy restricts NET-GUARD auditing to **a single active browser session** per node to maintain UDP/TCP socket and telemetry stream integrity.
+          </p>
+
+          <div className="w-full bg-stone-50 border border-stone-150 rounded-2xl p-4 font-mono text-[9px] text-left text-stone-500 space-y-1.5">
+            <div className="flex justify-between">
+              <span>STATUS:</span>
+              <span className="text-rose-600 font-bold">SESSION_CONFLICT</span>
+            </div>
+            <div className="flex justify-between">
+              <span>ACTIVE SESSION INSTANCE:</span>
+              <span className="text-stone-800 font-black truncate max-w-[150px]">{localStorage.getItem('dns_active_tab_id') || 'Unknown Node'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>POLICIES ENFORCED:</span>
+              <span className="text-stone-700 font-bold">SINGLE_SESSION_LOCK (MAX=1)</span>
+            </div>
+          </div>
+
+          <button
+            onClick={claimSession}
+            className="w-full py-4 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-mono text-[10px] font-bold uppercase tracking-widest transition-all shadow-[0_4px_12px_rgba(13,148,136,0.25)] active:scale-[0.98]"
+          >
+            Terminate Other Sessions & Claim Control
+          </button>
+          
+          <p className="text-[9.5px] text-stone-400 font-mono italic mt-1 leading-normal">
+            Claiming control will immediately suspend and lock the session in the other browser tab.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <ErrorBoundary>
