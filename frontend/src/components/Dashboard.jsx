@@ -79,18 +79,18 @@ const Dashboard = ({ results, setResults, activeTab, detectionMode, isMonitorOpe
             setResults(prev => {
                 if (prev && prev.totalQueries > 0) return prev;
                 return {
-                    totalQueries: 52,
-                    suspicious: 2,
-                    threats: 1,
-                    pps: 5.4,
-                    totalBytes: 4560,
-                    activeClientIPs: 4,
+                    totalQueries: 0,
+                    suspicious: 0,
+                    threats: 0,
+                    pps: 0.0,
+                    totalBytes: 0,
+                    activeClientIPs: 0,
                     adapterName: "Vercel-Serverless-SimNode",
-                    volumeTrend: [{ time: "00:00:00", traffic: 52 }],
+                    volumeTrend: [{ time: "00:00:00", traffic: 0 }],
                     results: [],
                     allQueries: [],
                     logs: ["[✓] Initialized advanced 5-tier classification simulation engine"],
-                    distribution: { critical: 1, high: 1, medium: 0 }
+                    distribution: { critical: 0, high: 0, medium: 0 }
                 };
             });
 
