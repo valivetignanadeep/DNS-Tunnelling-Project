@@ -11,18 +11,18 @@ import {
 const LogLine = ({ text, type = 'normal', index }) => {
     const colors = {
         alert:   'text-rose-600 font-bold',
-        warning: 'text-amber-500 font-semibold',
-        success: 'text-emerald-600',
-        normal:  'text-slate-700',
-        muted:   'text-slate-400',
-        info:    'text-indigo-600 font-semibold',
+        warning: 'text-amber-600 font-semibold',
+        success: 'text-emerald-600 font-bold',
+        normal:  'text-stone-700',
+        muted:   'text-stone-400',
+        info:    'text-teal-600 font-bold',
     };
     return (
         <div
-            className="flex gap-1.5 items-start py-1 border-b border-slate-50 animate-in fade-in slide-in-from-right-2 duration-300"
-            style={{ animationDelay: `${index * 20}ms` }}
+            className="flex gap-1.5 items-start py-1.5 border-b border-stone-100 animate-in fade-in slide-in-from-right-2 duration-300"
+            style={{ animationDelay: `${index * 15}ms` }}
         >
-            <span className="text-slate-300 font-mono text-[9px] pt-0.5 shrink-0">
+            <span className="text-stone-300 font-mono text-[9px] pt-0.5 shrink-0">
                 {new Date().toLocaleTimeString('en', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
             </span>
             <span className={`font-mono text-[9.5px] leading-relaxed break-all ${colors[type] || colors.normal}`}>
@@ -35,11 +35,11 @@ const LogLine = ({ text, type = 'normal', index }) => {
 // ────────────────────────────────────────────────
 // Section header for each panel
 // ────────────────────────────────────────────────
-const SectionHeader = ({ icon: Icon, title, badge, badgeColor = 'bg-indigo-100 text-indigo-700' }) => (
-    <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 border-b border-slate-100 sticky top-0 z-10">
+const SectionHeader = ({ icon: Icon, title, badge, badgeColor = 'bg-teal-100 text-teal-700' }) => (
+    <div className="flex items-center justify-between px-4 py-2.5 bg-stone-50 border-b border-stone-200/80 sticky top-0 z-10">
         <div className="flex items-center gap-2">
-            <Icon size={13} className="text-indigo-600" />
-            <span className="text-[10px] font-black text-slate-800 uppercase tracking-widest">{title}</span>
+            <Icon size={13} className="text-teal-600" />
+            <span className="text-[10px] font-black text-stone-800 uppercase tracking-widest">{title}</span>
         </div>
         {badge && (
             <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${badgeColor}`}>
@@ -61,33 +61,33 @@ const ParsingPanel = ({ queries }) => {
     }, [queries]);
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full bg-white">
             <SectionHeader
                 icon={Binary}
                 title="Packet Parsing"
                 badge={`${queries?.length || 0} pkts`}
-                badgeColor="bg-indigo-50 text-indigo-700"
+                badgeColor="bg-teal-50 text-teal-700 border border-teal-100"
             />
-            <div className="flex-1 overflow-y-auto px-3 py-2 custom-scrollbar bg-white space-y-0">
+            <div className="flex-1 overflow-y-auto px-4 py-2 custom-scrollbar bg-white">
                 {recent.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full gap-3 opacity-30 py-8">
-                        <Radio size={24} className="text-slate-400 animate-pulse" />
-                        <span className="text-[9px] text-slate-400 font-mono uppercase tracking-widest text-center">
+                    <div className="flex flex-col items-center justify-center h-full gap-3 opacity-30 py-12">
+                        <Radio size={24} className="text-stone-400 animate-pulse" />
+                        <span className="text-[9px] text-stone-400 font-mono uppercase tracking-widest text-center">
                             Awaiting packet stream...
                         </span>
                     </div>
                 ) : (
                     recent.map((q, i) => {
-                        const isAlerted = q.is_anomaly;
+                        const isAlerted = q.is_anomaly || q.entropy >= 4.5;
                         return (
                             <div
                                 key={i}
-                                className={`py-2 border-b border-slate-50 group transition-colors ${
-                                    isAlerted ? 'bg-rose-50/40' : 'hover:bg-slate-50/80'
+                                className={`py-2 border-b border-stone-100 group transition-colors ${
+                                    isAlerted ? 'bg-rose-50/40' : 'hover:bg-stone-50/50'
                                 }`}
                             >
                                 <div className="flex items-center justify-between mb-0.5">
-                                    <span className="font-mono text-[9px] text-indigo-700 font-bold truncate max-w-[150px]">
+                                    <span className="font-mono text-[9px] text-teal-700 font-bold truncate max-w-[150px]">
                                         {q.src_ip || '0.0.0.0'}
                                     </span>
                                     <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase ${
@@ -95,21 +95,21 @@ const ParsingPanel = ({ queries }) => {
                                             ? 'bg-rose-500/10 text-rose-600 border border-rose-500/20'
                                             : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
                                     }`}>
-                                        {q.qtype === '1' ? 'A' : q.qtype === '28' ? 'AAAA' : 'DNS'}
+                                        {q.qtype === '1' ? 'A' : q.qtype === '28' ? 'AAAA' : q.qtype === '16' ? 'TXT' : 'DNS'}
                                     </span>
                                 </div>
-                                <p className="font-mono text-[9px] text-slate-600 truncate leading-tight" title={q.domain || q.query}>
+                                <p className="font-mono text-[9px] text-stone-600 truncate leading-tight" title={q.domain || q.query}>
                                     {q.domain || q.query}
                                 </p>
-                                <div className="flex gap-3 mt-0.5">
-                                    <span className="font-mono text-[8px] text-slate-400">
+                                <div className="flex gap-3 mt-1">
+                                    <span className="font-mono text-[8px] text-stone-400">
                                         Entropy: <span className={`font-bold ${
                                             q.entropy >= 4.5 ? 'text-rose-500' :
-                                            q.entropy >= 3.0 ? 'text-amber-500' : 'text-emerald-600'
+                                            q.entropy >= 3.0 ? 'text-amber-600' : 'text-emerald-600'
                                         }`}>{q.entropy}</span>
                                     </span>
-                                    <span className="font-mono text-[8px] text-slate-400">
-                                        Size: <span className="font-bold text-slate-600">{q.size}B</span>
+                                    <span className="font-mono text-[8px] text-stone-400">
+                                        Size: <span className="font-bold text-stone-600">{q.size}B</span>
                                     </span>
                                 </div>
                             </div>
@@ -129,33 +129,33 @@ const DetectionPanel = ({ anomalies, distribution }) => {
     const recent = anomalies ? anomalies.slice(0, 20) : [];
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full bg-white">
             <SectionHeader
                 icon={ShieldAlert}
                 title="Detection Engine"
                 badge={`${anomalies?.length || 0} flags`}
-                badgeColor={anomalies?.length > 0 ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-700'}
+                badgeColor={anomalies?.length > 0 ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}
             />
             {/* Distribution mini-stats */}
             {distribution && (
-                <div className="grid grid-cols-3 gap-0 border-b border-slate-100">
+                <div className="grid grid-cols-3 gap-0 border-b border-stone-200/80">
                     {[
                         { label: 'Critical', value: distribution.critical, color: 'text-rose-600 bg-rose-50', border: 'border-rose-100' },
                         { label: 'High',     value: distribution.high,     color: 'text-amber-600 bg-amber-50', border: 'border-amber-100' },
                         { label: 'Medium',   value: distribution.medium,   color: 'text-sky-600 bg-sky-50',     border: 'border-sky-100' },
                     ].map(({ label, value, color, border }) => (
-                        <div key={label} className={`flex flex-col items-center py-2 border-r ${border} last:border-r-0`}>
+                        <div key={label} className={`flex flex-col items-center py-2.5 border-r ${border} last:border-r-0`}>
                             <span className={`text-base font-black font-mono leading-tight ${color.split(' ')[0]}`}>{value ?? 0}</span>
-                            <span className="text-[8px] text-slate-400 uppercase font-bold tracking-wider">{label}</span>
+                            <span className="text-[8px] text-stone-400 uppercase font-bold tracking-wider">{label}</span>
                         </div>
                     ))}
                 </div>
             )}
-            <div className="flex-1 overflow-y-auto px-3 py-2 custom-scrollbar bg-white">
+            <div className="flex-1 overflow-y-auto px-4 py-2 custom-scrollbar bg-white">
                 {recent.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full gap-3 opacity-30 py-8">
-                        <CheckCircle size={24} className="text-emerald-500" />
-                        <span className="text-[9px] text-slate-400 font-mono uppercase tracking-widest text-center">
+                    <div className="flex flex-col items-center justify-center h-full gap-3 opacity-30 py-12">
+                        <CheckCircle size={24} className="text-emerald-500 animate-pulse" />
+                        <span className="text-[9px] text-stone-400 font-mono uppercase tracking-widest text-center">
                             No threats detected yet
                         </span>
                     </div>
@@ -163,7 +163,7 @@ const DetectionPanel = ({ anomalies, distribution }) => {
                     recent.map((a, i) => (
                         <div
                             key={i}
-                            className="py-2.5 border-b border-slate-50 animate-in fade-in duration-500"
+                            className="py-2.5 border-b border-stone-100 animate-in fade-in duration-500"
                         >
                             <div className="flex items-start justify-between gap-2 mb-1">
                                 <div className="flex items-center gap-1.5 min-w-0">
@@ -171,7 +171,7 @@ const DetectionPanel = ({ anomalies, distribution }) => {
                                         a.risk_score >= 80 ? 'text-rose-500' :
                                         a.risk_score >= 40 ? 'text-amber-500' : 'text-sky-500'
                                     }`} />
-                                    <p className="font-mono text-[9px] text-slate-800 font-bold truncate" title={a.domain}>
+                                    <p className="font-mono text-[9px] text-stone-800 font-bold truncate" title={a.domain}>
                                         {a.domain}
                                     </p>
                                 </div>
@@ -182,16 +182,16 @@ const DetectionPanel = ({ anomalies, distribution }) => {
                                     {a.risk_score}%
                                 </span>
                             </div>
-                            <p className="text-[8.5px] text-slate-500 truncate font-mono mb-0.5 ml-4">
+                            <p className="text-[8.5px] text-stone-500 truncate font-mono mb-0.5 ml-4">
                                 {a.src_ip}
                             </p>
                             {a.threat_type && (
-                                <span className="ml-4 text-[8px] font-bold text-indigo-600 uppercase tracking-wide leading-none">
+                                <span className="ml-4 text-[8px] font-bold text-teal-600 uppercase tracking-wide leading-none">
                                     ↳ {a.threat_type}
                                 </span>
                             )}
                             {a.reasons && (
-                                <p className="ml-4 text-[8px] text-slate-400 mt-0.5">{a.reasons}</p>
+                                <p className="ml-4 text-[8px] text-stone-400 mt-0.5">{a.reasons}</p>
                             )}
                         </div>
                     ))
@@ -223,48 +223,48 @@ const TransmittingPanel = ({ stats, logs }) => {
     };
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full bg-white">
             <SectionHeader
                 icon={ArrowRightLeft}
                 title="Transmit Monitor"
                 badge={pps > 0 ? `${pps} PPS` : 'IDLE'}
-                badgeColor={pps > 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}
+                badgeColor={pps > 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-stone-100 text-stone-500 border border-stone-200'}
             />
 
             {/* Live Metrics Grid */}
-            <div className="grid grid-cols-2 gap-0 border-b border-slate-100">
+            <div className="grid grid-cols-2 gap-0 border-b border-stone-200/80">
                 {[
-                    { label: 'Throughput', value: `${pps} PPS`, icon: TrendingUp, color: 'text-indigo-600' },
+                    { label: 'Throughput', value: `${pps} PPS`, icon: TrendingUp, color: 'text-teal-600' },
                     { label: 'Data Volume', value: formatBytes(totalBytes), icon: Binary, color: 'text-purple-600' },
                     { label: 'Active Sources', value: `${clientIPs} IPs`, icon: Radio, color: 'text-emerald-600' },
                     { label: 'Safe Ratio', value: `${safePct}%`, icon: CheckCircle, color: 'text-sky-600' },
                 ].map(({ label, value, icon: Icon, color }) => (
-                    <div key={label} className="flex flex-col px-3 py-2.5 border-b border-r border-slate-50 last:border-r-0">
+                    <div key={label} className="flex flex-col px-3 py-2.5 border-b border-r border-stone-100 last:border-r-0">
                         <Icon size={10} className={`${color} mb-1`} />
-                        <span className="font-mono font-black text-sm text-slate-900 leading-tight">{value}</span>
-                        <span className="text-[8px] text-slate-400 uppercase font-bold tracking-wide">{label}</span>
+                        <span className="font-mono font-black text-xs text-stone-900 leading-tight">{value}</span>
+                        <span className="text-[8px] text-stone-400 uppercase font-bold tracking-wide">{label}</span>
                     </div>
                 ))}
             </div>
 
             {/* Adapter source */}
-            <div className="flex items-center gap-2 px-3 py-2 bg-slate-50/80 border-b border-slate-100">
-                <Wifi size={10} className="text-indigo-500" />
-                <span className="text-[8.5px] font-mono text-slate-600 truncate">
-                    Adapter: <span className="font-bold text-indigo-700">{adapterName}</span>
+            <div className="flex items-center gap-2 px-3 py-2 bg-stone-50 border-b border-stone-100">
+                <Wifi size={10} className="text-teal-500" />
+                <span className="text-[8.5px] font-mono text-stone-600 truncate">
+                    Adapter: <span className="font-bold text-teal-700">{adapterName}</span>
                 </span>
             </div>
 
             {/* Traffic ratio bars */}
-            <div className="px-3 py-3 border-b border-slate-100 space-y-2">
+            <div className="px-3 py-3 border-b border-stone-100 space-y-2">
                 <div>
                     <div className="flex justify-between mb-1">
-                        <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wide flex items-center gap-1">
+                        <span className="text-[8px] text-stone-500 font-bold uppercase tracking-wide flex items-center gap-1">
                             <ArrowDown size={8} className="text-emerald-500" /> Clean Traffic
                         </span>
                         <span className="text-[8px] font-mono font-bold text-emerald-600">{safePct}%</span>
                     </div>
-                    <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden">
                         <div
                             className="h-full bg-emerald-400 rounded-full transition-all duration-700"
                             style={{ width: `${safePct}%` }}
@@ -273,12 +273,12 @@ const TransmittingPanel = ({ stats, logs }) => {
                 </div>
                 <div>
                     <div className="flex justify-between mb-1">
-                        <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wide flex items-center gap-1">
+                        <span className="text-[8px] text-stone-500 font-bold uppercase tracking-wide flex items-center gap-1">
                             <ArrowUp size={8} className="text-rose-500" /> Threat Traffic
                         </span>
                         <span className="text-[8px] font-mono font-bold text-rose-600">{threatPct}%</span>
                     </div>
-                    <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden">
                         <div
                             className="h-full bg-rose-400 rounded-full transition-all duration-700"
                             style={{ width: `${threatPct}%` }}
@@ -288,14 +288,14 @@ const TransmittingPanel = ({ stats, logs }) => {
             </div>
 
             {/* Live engine log stream */}
-            <div className="flex-1 overflow-y-auto px-3 py-2 custom-scrollbar bg-white space-y-0">
-                <p className="text-[8px] font-bold text-slate-300 uppercase tracking-widest pb-1 border-b border-slate-50 mb-1">
+            <div className="flex-1 overflow-y-auto px-4 py-2 custom-scrollbar bg-white space-y-0">
+                <p className="text-[8px] font-bold text-stone-300 uppercase tracking-widest pb-1 border-b border-stone-100 mb-1">
                     Engine Log Stream
                 </p>
                 {recentLogs.length === 0 ? (
                     <div className="flex items-center gap-2 opacity-30 py-4">
-                        <Circle size={10} className="text-slate-400 animate-pulse" />
-                        <span className="text-[9px] text-slate-400 font-mono">Waiting for log events...</span>
+                        <Circle size={10} className="text-stone-400 animate-pulse" />
+                        <span className="text-[9px] text-stone-400 font-mono">Waiting for log events...</span>
                     </div>
                 ) : (
                     recentLogs.map((log, i) => (
@@ -348,42 +348,42 @@ const PacketMonitorSidebar = ({ isOpen, onClose, liveData }) => {
         <>
             {/* Backdrop */}
             <div
-                className="fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-[60]"
+                className="fixed inset-0 bg-stone-900/35 backdrop-blur-sm z-[60]"
                 onClick={onClose}
             />
 
             {/* Sliding Panel */}
-            <div className="fixed right-0 top-0 h-screen w-80 bg-white border-l border-slate-200 shadow-2xl z-[70] flex flex-col animate-in slide-in-from-right duration-400">
+            <div className="fixed right-0 top-0 h-screen w-80 bg-white border-l border-stone-200 shadow-2xl z-[70] flex flex-col animate-in slide-in-from-right duration-400">
 
                 {/* Panel Header */}
-                <div className="h-14 bg-white border-b border-slate-100 flex items-center justify-between px-4 shrink-0">
+                <div className="h-14 bg-white border-b border-stone-150 flex items-center justify-between px-4 shrink-0">
                     <div className="flex items-center gap-2.5">
-                        <div className="p-1.5 bg-indigo-600 rounded-lg shadow-sm">
+                        <div className="p-1.5 bg-teal-600 rounded-lg shadow-sm">
                             <Cpu size={13} className="text-white" />
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-[10px] font-black text-slate-800 uppercase tracking-widest leading-tight">Packet Monitor</span>
-                            <span className="text-[8px] text-slate-400 font-mono uppercase tracking-wide">Live Telemetry Feed</span>
+                            <span className="text-[10px] font-black text-stone-850 uppercase tracking-widest leading-tight">Packet Monitor</span>
+                            <span className="text-[8px] text-stone-400 font-mono uppercase tracking-wide">Live Telemetry Feed</span>
                         </div>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-all"
+                        className="p-2 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-lg transition-all"
                     >
                         <X size={15} />
                     </button>
                 </div>
 
                 {/* Tab switcher */}
-                <div className="flex border-b border-slate-100 shrink-0 bg-slate-50">
+                <div className="flex border-b border-stone-150 shrink-0 bg-stone-50">
                     {panels.map(({ id, label, icon: Icon }) => (
                         <button
                             key={id}
                             onClick={() => setActivePanel(id)}
-                            className={`flex-1 flex flex-col items-center py-2.5 gap-1 text-[8.5px] font-bold uppercase tracking-wide transition-all border-r border-slate-100 last:border-r-0 ${
+                            className={`flex-1 flex flex-col items-center py-2.5 gap-1 text-[8.5px] font-bold uppercase tracking-wide transition-all border-r border-stone-150 last:border-r-0 ${
                                 activePanel === id
-                                    ? 'bg-white text-indigo-700 border-b-2 border-indigo-600 -mb-px'
-                                    : 'text-slate-500 hover:text-indigo-600 hover:bg-white/60'
+                                    ? 'bg-white text-teal-700 border-b-2 border-teal-600 -mb-px'
+                                    : 'text-stone-500 hover:text-teal-600 hover:bg-white/60'
                             }`}
                         >
                             <Icon size={13} />
