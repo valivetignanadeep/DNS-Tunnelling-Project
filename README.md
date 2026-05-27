@@ -17,35 +17,6 @@ By combining **Shannon Entropy scoring**, **subdomain character density filters*
 
 ---
 
-## 🛠️ Dynamic Dual-Mode Architecture
-
-The project has been built to offer an optimized experience across both local corporate infrastructure and public cloud environments:
-
-```mermaid
-graph TD
-    User([Security Operator]) --> UI[React 18 / Vite / Tailwind Web App]
-    UI -->|Static PCAP Upload| FlaskAPI[/api/upload]
-    UI -->|Start Live Capture| FlaskAPIStart[/api/live/start]
-    
-    subgraph Vercel Environment (Cloud Demo)
-        FlaskAPIStart -->|Serverless Fallback| ServerlessSim[High-Fidelity Client Telemetry Simulator]
-        ServerlessSim -->|Live 5-Tier Streams| Console[Interactive Scrolling CLI Console Sidebar]
-    end
-
-    subgraph Local Environment (NPcap / Raw Sockets)
-        FlaskAPIStart -->|Raw UDP Port 53 Sniff| ScapySniffer[Scapy Background Capture Thread]
-        ScapySniffer -->|Interface Sniff| RawNetwork[WiFi / Ethernet Interface]
-        ScapySniffer -->|Active Socket Telemetry| Console
-    end
-    
-    Console -->|Visual Badges & Metrics| UI
-```
-
-1. **Enterprise Local Mode (Npcap / WinPcap Core)**: Runs a background multithreaded capture engine using `scapy` raw sockets. Intercepts DNS packets over UDP/TCP port 53 directly off active network adapters.
-2. **Cloud Demo Mode (Vercel Serverless Fallback)**: Automatically bypasses cloud serverless timeouts by launching an asynchronous frontend simulation engine. Generates high-fidelity traffic flows mimicking actual normal, suspicious, and exfiltration-level network traffic.
-
----
-
 ## 📊 Heuristic 5-Tier DNS Classification Matrix
 
 DNS requests are parsed on-the-fly and assigned a granular security level based on mathematical randomness ($H(x)$), record types, and bytes:
@@ -92,24 +63,7 @@ To provide high-fidelity security operations, we built a **Live Packet Console**
 *   [Node.js 18+](https://nodejs.org/)
 *   **For Raw Packet Capture**: Install [Npcap](https://npcap.com/) (Windows) or `libpcap` (macOS/Linux).
 
-### Quickstart
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/valivetignanadeep/DNS-Tunnelling-Project.git
-   cd DNS-Tunnelling-Project
-   ```
-
-2. Run the unified launcher script:
-   *   **Windows**: Double-click `Start-Project.bat` (or run `npm start` in root).
-   *   **macOS/Linux**:
-       ```bash
-       npm install && npm start
-       ```
-
-This starts both the **Flask Backend** (Port 5000) and the **Vite React Frontend** (Port 5173) concurrently!
-
----
 
 ## 📂 Codebase Navigation
 
