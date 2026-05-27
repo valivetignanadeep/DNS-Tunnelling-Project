@@ -107,16 +107,29 @@ class LiveSniffer:
         elif risk_score >= 40:
             threat_type = "Subdomain Reconnaissance Probe"
             
-        classification = "HIGH" if entropy >= 4.5 else "AVG" if entropy >= 3.0 else "LOW"
+        qtype_sim = '1' if random.random() > 0.3 else '28'
         
+        # Consistent 5-tier classification logic
+        if entropy >= 4.8 or (entropy >= 4.2 and qtype_sim == '16' and size > 110):
+            classification = "CRITICAL"
+        elif entropy >= 4.2:
+            classification = "HIGH RISK"
+        elif entropy >= 3.5:
+            classification = "SUSPICIOUS"
+        elif entropy >= 2.8:
+            classification = "LOW RISK"
+        else:
+            classification = "CLEAN"
+            
         is_anomaly = risk_score > 0
+
         
         query_entry = {
             'timestamp': float(timestamp),
             'src_ip': src_ip,
             'domain': domain,
             'query': domain,
-            'qtype': '1' if random.random() > 0.3 else '28', # Simulated/actual query type (A or AAAA)
+            'qtype': qtype_sim,
             'size': int(size),
             'entropy': round(entropy, 2),
             'classification': classification,

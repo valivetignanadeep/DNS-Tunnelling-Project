@@ -54,9 +54,25 @@ class DNSAnalyzer:
         ]
 
         # Prepare All Queries Log
-        df['entropy'] = df['query'].apply(lambda x: self.calculate_entropy(x.split('.')[0]))
-        df['classification'] = df['entropy'].apply(lambda e: "HIGH" if e >= 4.5 else "AVG" if e >= 3.0 else "LOW")
+        df['entropy'] = df['query'].apply(lambda x: self.calculate_entropy(x.split('.')[0]) if isinstance(x, str) else 0.0)
         
+        def python_classify(row):
+            e = row['entropy']
+            q = str(row.get('qtype', '1'))
+            s = int(row.get('size', 60))
+            if e >= 4.8 or (e >= 4.2 and q == '16' and s > 110):
+                return "CRITICAL"
+            elif e >= 4.2:
+                return "HIGH RISK"
+            elif e >= 3.5 or q == '16':
+                return "SUSPICIOUS"
+            elif e >= 2.8:
+                return "LOW RISK"
+            else:
+                return "CLEAN"
+                
+        df['classification'] = df.apply(python_classify, axis=1)
+
         # Drop time_bin as Timestamps are not JSON serializable
         df_for_log = df.drop(columns=['time_bin'], errors='ignore')
         all_queries = df_for_log.to_dict('records')

@@ -31,19 +31,44 @@ const Dashboard = ({ results, setResults, activeTab, detectionMode, isMonitorOpe
         // Realistic client IPs
         const clientIPs = ["192.168.1.42", "192.168.1.105", "192.168.1.112", "192.168.1.101"];
         
-        // Common safe domains
-        const safeDomains = [
+        // Benign DNS Queries (Clean)
+        const cleanDomains = [
             "google.com", "github.com", "vercel.app", "reddit.com", "aws.amazon.com",
             "fonts.googleapis.com", "api.github.com", "stackoverflow.com",
-            "slack.com", "medium.com", "microsoft.com", "wikipedia.org"
+            "slack.com", "medium.com", "microsoft.com", "wikipedia.org",
+            "yahoo.com", "apple.com", "netflix.com", "spotify.com"
         ];
 
-        // Threat signatures
-        const threatDomains = [
-            "v1.exfil.data.081bc7e4f8a.tunnel.net",
-            "a3f9e8b2c1d9.c2server.attacker.com",
+        // Low Risk DNS Queries (trackers, analytics, dynamic hostnames)
+        const lowRiskDomains = [
+            "tracker-v1.analytics.google-analytics.com",
+            "e8c9a3f2.dynamic-dns.no-ip.org",
+            "cdn.edge-telemetry.microsoft.com",
+            "s3-w-us-west-2.amazonaws.com"
+        ];
+
+        // Suspicious DNS Queries (discovery scans, heavy subdomain telemetry)
+        const suspiciousDomains = [
+            "probe-subdomain-recon-01a9.discovery.net",
+            "cdn-node-99a3b.cache-server-dist.xyz",
+            "telemetry-beacon.agent-update.org",
+            "sync-service.dynamic-route.info"
+        ];
+
+        // High Risk / C2 Beaconing Queries
+        const highRiskDomains = [
+            "c2-heartbeat-pulse-01.command.cnc-hub.biz",
             "dns-auth.99283f982bc71.hack-tunnel.xyz",
-            "w9a8s7d6f5g4.command.cnc-hub.biz"
+            "w9a8s7d6f5g4.command.cnc-hub.biz",
+            "a3f9e8b2c1d9.c2server.attacker.com"
+        ];
+
+        // Critical / Data Exfiltration Tunneling Queries (long, heavy, encrypted)
+        const criticalDomains = [
+            "am9obi5kb2VAZXhhbXBsZS5jb20.v1.exfil.data.081bc7e4f8a.tunnel.net",
+            "c2VjcmV0X2FjY2Vzc19rZXlfdmFsdWU.payload-exfil.secure-tunnel.biz",
+            "dXNlcm5hbWU6cGFzc3dvcmQ.authkeys-secops.tunnel-dns.xyz",
+            "dGhpcyBpcyBhIHRlc3QgcGF5bG9hZA.z9y8x7w6v5u4t3s2r1.malicious-exfil.cc"
         ];
 
         const startFrontendSimulation = () => {
@@ -54,18 +79,18 @@ const Dashboard = ({ results, setResults, activeTab, detectionMode, isMonitorOpe
             setResults(prev => {
                 if (prev && prev.totalQueries > 0) return prev;
                 return {
-                    totalQueries: 48,
-                    suspicious: 1,
-                    threats: 0,
-                    pps: 6.2,
-                    totalBytes: 4240,
-                    activeClientIPs: 3,
+                    totalQueries: 52,
+                    suspicious: 2,
+                    threats: 1,
+                    pps: 5.4,
+                    totalBytes: 4560,
+                    activeClientIPs: 4,
                     adapterName: "Vercel-Serverless-SimNode",
-                    volumeTrend: [{ time: "00:00:00", traffic: 48 }],
+                    volumeTrend: [{ time: "00:00:00", traffic: 52 }],
                     results: [],
                     allQueries: [],
-                    logs: ["[✓] Initialized serverless live simulation runtime"],
-                    distribution: { critical: 0, high: 1, medium: 0 }
+                    logs: ["[✓] Initialized advanced 5-tier classification simulation engine"],
+                    distribution: { critical: 1, high: 1, medium: 0 }
                 };
             });
 
@@ -74,51 +99,133 @@ const Dashboard = ({ results, setResults, activeTab, detectionMode, isMonitorOpe
                 if (!isMounted) return;
 
                 setResults(prev => {
-                    const newQueriesCount = Math.floor(Math.random() * 4) + 2; // 2 to 5 queries
+                    const newQueriesCount = Math.floor(Math.random() * 3) + 2; // 2 to 4 queries per tick
                     const newTotalQueries = prev.totalQueries + newQueriesCount;
                     const newPPS = parseFloat((3.5 + Math.random() * 8.5).toFixed(1));
-                    const newBytes = prev.totalBytes + (newQueriesCount * (Math.floor(Math.random() * 80) + 40));
                     
                     let newSuspicious = prev.suspicious;
                     let newThreats = prev.threats;
+                    let totalTickBytes = 0;
+                    
                     const currentResults = [...prev.results];
                     const currentAllQueries = [...prev.allQueries];
                     const currentLogs = [...prev.logs];
                     const currentDistribution = { ...prev.distribution };
 
-                    // 15% chance to generate a suspicious packet
-                    const isSuspiciousTick = Math.random() < 0.15;
-                    
                     for (let i = 0; i < newQueriesCount; i++) {
                         const timestamp = Math.floor(Date.now() / 1000);
                         const srcIp = clientIPs[Math.floor(Math.random() * clientIPs.length)];
                         
-                        if (isSuspiciousTick && i === 0) {
-                            // Malicious DNS Tunneling Packet
-                            const domain = threatDomains[Math.floor(Math.random() * threatDomains.length)];
-                            const entropy = parseFloat((4.5 + Math.random() * 1.5).toFixed(2));
-                            const size = Math.floor(Math.random() * 60) + 90; // 90 to 150 bytes
-                            const risk = Math.floor(Math.random() * 20) + 75; // 75% to 95%
-                            
-                            newSuspicious += 1;
-                            const isCritical = risk >= 85;
-                            if (isCritical) {
-                                newThreats += 1;
-                                currentDistribution.critical += 1;
-                            } else {
-                                currentDistribution.high += 1;
-                            }
+                        // Select packet category based on realistic distribution
+                        // 65% Clean, 18% Low, 10% Suspicious, 5% High, 2% Critical
+                        const rand = Math.random();
+                        let category = "CLEAN";
+                        let domain = "";
+                        let entropy = 0;
+                        let size = 0;
+                        let qtype = "1"; // "A"
+                        let risk = 0;
+                        let threatType = null;
+                        let reasons = [];
 
+                        if (rand < 0.65) {
+                            // CLEAN
+                            category = "CLEAN";
+                            domain = cleanDomains[Math.floor(Math.random() * cleanDomains.length)];
+                            entropy = parseFloat((1.5 + Math.random() * 1.2).toFixed(2));
+                            size = Math.floor(Math.random() * 30) + 45; // 45-75 bytes
+                            qtype = Math.random() > 0.8 ? "28" : "1"; // AAAA or A
+                            risk = Math.floor(Math.random() * 10);
+                        } else if (rand < 0.83) {
+                            // LOW RISK
+                            category = "LOW RISK";
+                            domain = lowRiskDomains[Math.floor(Math.random() * lowRiskDomains.length)];
+                            entropy = parseFloat((2.8 + Math.random() * 0.6).toFixed(2));
+                            size = Math.floor(Math.random() * 30) + 65; // 65-95 bytes
+                            qtype = Math.random() > 0.7 ? "28" : "1";
+                            risk = Math.floor(Math.random() * 20) + 10;
+                        } else if (rand < 0.93) {
+                            // SUSPICIOUS (MEDIUM)
+                            category = "SUSPICIOUS";
+                            domain = suspiciousDomains[Math.floor(Math.random() * suspiciousDomains.length)];
+                            entropy = parseFloat((3.5 + Math.random() * 0.6).toFixed(2));
+                            size = Math.floor(Math.random() * 40) + 80; // 80-120 bytes
+                            qtype = Math.random() > 0.5 ? "5" : "16"; // CNAME or TXT
+                            risk = Math.floor(Math.random() * 25) + 40;
+                            threatType = "Subdomain Reconnaissance Probe";
+                            reasons.push("Subdomain Density");
+                            newSuspicious += 1;
+                            currentDistribution.medium += 1;
+                        } else if (rand < 0.98) {
+                            // HIGH RISK
+                            category = "HIGH RISK";
+                            domain = highRiskDomains[Math.floor(Math.random() * highRiskDomains.length)];
+                            entropy = parseFloat((4.2 + Math.random() * 0.5).toFixed(2));
+                            size = Math.floor(Math.random() * 40) + 100; // 100-140 bytes
+                            qtype = "16"; // TXT
+                            risk = Math.floor(Math.random() * 10) + 70;
+                            threatType = "Cobalt Strike DNS Beaconing";
+                            reasons.push("High Entropy", "Cyclical Signature");
+                            newSuspicious += 1;
+                            currentDistribution.high += 1;
+                        } else {
+                            // CRITICAL
+                            category = "CRITICAL";
+                            domain = criticalDomains[Math.floor(Math.random() * criticalDomains.length)];
+                            entropy = parseFloat((4.8 + Math.random() * 1.0).toFixed(2));
+                            size = Math.floor(Math.random() * 70) + 120; // 120-190 bytes
+                            qtype = Math.random() > 0.5 ? "16" : "5"; // TXT or CNAME
+                            risk = Math.floor(Math.random() * 14) + 85;
+                            threatType = "Data Exfiltration (Base64/Hex)";
+                            reasons.push("High Entropy", "Payload Length");
+                            newSuspicious += 1;
+                            newThreats += 1;
+                            currentDistribution.critical += 1;
+                        }
+
+                        totalTickBytes += size;
+
+                        // Add to queries stream
+                        currentAllQueries.unshift({
+                            timestamp,
+                            src_ip: srcIp,
+                            query: domain,
+                            qtype,
+                            size,
+                            entropy,
+                            classification: category,
+                            risk_score: risk
+                        });
+
+                        // Add to anomalies list if Suspicious/High/Critical
+                        if (category === "SUSPICIOUS" || category === "HIGH RISK" || category === "CRITICAL") {
+                            const isCritical = category === "CRITICAL";
+                            
                             const anomalyObj = {
                                 timestamp,
                                 src_ip: srcIp,
                                 domain,
                                 risk_score: risk,
-                                reasons: entropy > 5.2 ? "High Entropy, Unusual Length" : "High Entropy",
+                                reasons: reasons.join(", "),
                                 entropy,
-                                length: domain.length,
-                                frequency: prev.suspicious * 4 + 1,
-                                threat_type: isCritical ? "DNS Tunneling (Exfiltration)" : "C2 Tunneling Beacon"
+                                length: domain.split('.')[0].length,
+                                frequency: isCritical ? Math.floor(Math.random() * 300) + 150 : Math.floor(Math.random() * 80) + 20,
+                                threat_type: threatType,
+                                description: isCritical 
+                                    ? "High entropy, long length subdomain structured to transmit encrypted binary payloads via DNS queries." 
+                                    : category === "HIGH RISK" 
+                                        ? "Suspicious cyclical hostname structure commonly used by Cobalt Strike C2 beacons to post heartbeat telemetry."
+                                        : "Rapid burst of unique high-entropy subdomains pointing to a single domain name, suggesting malicious discovery scanning.",
+                                harm_explanation: isCritical 
+                                    ? "Leaks critical databases, proprietary codebase intellectual property, or Active Directory system secrets chunk-by-chunk."
+                                    : category === "HIGH RISK"
+                                        ? "Enables persistent stealth access, allowing threat actors to execute remote commands and initiate malware payloads."
+                                        : "Allows threat actors to map active recursive resolvers and identify open internal endpoints without making direct contact.",
+                                mitigation_protocol: isCritical
+                                    ? "Isolate the client workstation immediately. Flush DNS caches across local subnet and implement inspection of TXT, CNAME, and NULL records."
+                                    : category === "HIGH RISK"
+                                        ? "Configure active firewall sinkholing for the parent domain and deploy host-level endpoint detection (EDR)."
+                                        : "Enable response rate limiting (RRL) on authoritative name servers and block source IP address."
                             };
 
                             // Add to anomalies list if unique
@@ -126,46 +233,22 @@ const Dashboard = ({ results, setResults, activeTab, detectionMode, isMonitorOpe
                                 currentResults.unshift(anomalyObj);
                             }
 
-                            // Add to parsed queries
-                            currentAllQueries.unshift({
-                                timestamp,
-                                src_ip: srcIp,
-                                query: domain,
-                                qtype: Math.random() > 0.5 ? "16" : "1", // TXT or A
-                                size,
-                                entropy
-                            });
-
-                            // Add log line
-                            currentLogs.unshift(`[ALERT] ⚠ Tunneling signature flagged from ${srcIp} -> ${domain} (Entropy: ${entropy}, Risk: ${risk}%)`);
-
+                            // Add alert log line
+                            currentLogs.unshift(`[ALERT] ⚠️ ${category} Tunneling Signature Flagged: ${srcIp} -> ${domain} (H: ${entropy}, Risk: ${risk}%)`);
                         } else {
-                            // Normal Packet
-                            const domain = safeDomains[Math.floor(Math.random() * safeDomains.length)];
-                            const entropy = parseFloat((2.0 + Math.random() * 1.3).toFixed(2));
-                            const size = Math.floor(Math.random() * 40) + 40; // 40 to 80 bytes
-                            
-                            currentAllQueries.unshift({
-                                timestamp,
-                                src_ip: srcIp,
-                                query: domain,
-                                qtype: Math.random() > 0.8 ? "28" : "1", // AAAA or A
-                                size,
-                                entropy
-                            });
-
-                            if (Math.random() > 0.85) {
-                                currentLogs.unshift(`[✓] Packet parsed: ${srcIp} -> ${domain} (Entropy: ${entropy}, Normal)`);
+                            // Safe log line
+                            if (Math.random() > 0.8) {
+                                currentLogs.unshift(`[✓] Packet parsed successfully: ${srcIp} -> ${domain} (Entropy: ${entropy}, Clean)`);
                             }
                         }
                     }
 
-                    // Keep lists under control (limit to 40)
-                    if (currentAllQueries.length > 40) currentAllQueries.length = 40;
-                    if (currentResults.length > 20) currentResults.length = 20;
+                    // Keep lists under control for memory
+                    if (currentAllQueries.length > 50) currentAllQueries.length = 50;
+                    if (currentResults.length > 25) currentResults.length = 25;
                     if (currentLogs.length > 30) currentLogs.length = 30;
 
-                    // Update temporal trend chart (append or maintain rolling window of latest 10 items)
+                    // Update temporal trend chart
                     const currentTimeString = new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
                     const newTrend = [...prev.volumeTrend, { time: currentTimeString, traffic: newQueriesCount * 3 }];
                     if (newTrend.length > 10) newTrend.shift();
@@ -175,7 +258,7 @@ const Dashboard = ({ results, setResults, activeTab, detectionMode, isMonitorOpe
                         suspicious: newSuspicious,
                         threats: newThreats,
                         pps: newPPS,
-                        totalBytes: newBytes,
+                        totalBytes: prev.totalBytes + totalTickBytes,
                         activeClientIPs: clientIPs.length,
                         adapterName: "Vercel-Serverless-SimNode",
                         volumeTrend: newTrend,
@@ -185,7 +268,7 @@ const Dashboard = ({ results, setResults, activeTab, detectionMode, isMonitorOpe
                         distribution: currentDistribution
                     };
                 });
-            }, 1500);
+            }, 1200); // Poll fast for console realism
         };
 
         const fetchLiveStatus = async () => {
