@@ -359,14 +359,7 @@ const Dashboard = ({ results, setResults, activeTab, detectionMode, isMonitorOpe
         <div className="dashboard-container ml-72 p-6 md:p-10 bg-[#fdfbf7] min-h-screen text-stone-800 relative overflow-x-hidden">
             <div className="bg-mesh"></div>
 
-            {isDemoSimActive && (
-                <div className="mb-4 flex items-center gap-2.5 px-4 py-2 bg-indigo-50 border border-indigo-100 rounded-xl animate-bounce">
-                    <span className="w-2 h-2 rounded-full bg-indigo-600 animate-ping" />
-                    <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider font-mono">
-                        Vercel Serverless Demo Mode Active: High-Fidelity Client Sniffer Streaming
-                    </span>
-                </div>
-            )}
+
 
             <header className="mb-12 flex items-center justify-between relative z-10">
                 <div className="space-y-1">
