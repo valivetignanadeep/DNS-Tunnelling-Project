@@ -356,6 +356,16 @@ class LiveSniffer:
             high_threats = len([a for a in self.anomalies if a['risk_score'] >= 40 and a['risk_score'] < 80])
             med_threats = len([a for a in self.anomalies if a['risk_score'] < 40])
             
+            import platform
+            import sys
+            system_info = {
+                "os": platform.system(),
+                "os_release": platform.release(),
+                "os_arch": platform.machine(),
+                "python_version": sys.version.split(' ')[0],
+                "processor": platform.processor() or "AMD64 Architecture"
+            }
+            
             return {
                 "active": self.active,
                 "totalQueries": self.total_queries,
@@ -373,5 +383,6 @@ class LiveSniffer:
                     "critical": critical_threats,
                     "high": high_threats,
                     "medium": med_threats
-                }
+                },
+                "systemInfo": system_info
             }

@@ -476,6 +476,93 @@ const Dashboard = ({ results, setResults, activeTab, detectionMode, isMonitorOpe
                         </div>
                     </div>
 
+                    {/* Environmental Diagnostics & Mathematical Threat Models Section */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {/* 1. Environmental Diagnostics Card */}
+                        <div className="enterprise-card p-8 rounded-[2rem] bg-white border border-stone-200 shadow-sm relative overflow-hidden group">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="p-2.5 bg-teal-50 rounded-xl border border-teal-100 shadow-sm">
+                                    <Cpu className="w-5 h-5 text-teal-600 animate-pulse" />
+                                </div>
+                                <div>
+                                    <h3 className="text-stone-900 font-bold text-lg tracking-tight">Environmental Host Diagnostics</h3>
+                                    <p className="text-stone-400 text-[8px] font-mono uppercase tracking-widest mt-0.5">Execution Architecture & Host Platform</p>
+                                </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-4 font-mono text-[10px] leading-relaxed text-stone-600 mt-4 border-t border-stone-100 pt-4">
+                                <div className="space-y-2">
+                                    <div>
+                                        <span className="text-stone-400 block font-bold text-[8px] uppercase tracking-wide">HOST OPERATING SYSTEM</span>
+                                        <span className="text-stone-850 font-black uppercase">{data?.systemInfo?.os || "Windows Node"} ({data?.systemInfo?.os_release || "POSIX Sim"})</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-stone-400 block font-bold text-[8px] uppercase tracking-wide">RUNTIME ARCHITECTURE</span>
+                                        <span className="text-stone-850 font-black">{data?.systemInfo?.os_arch || "AMD64"} - {data?.systemInfo?.processor?.split(' ')[0] || "x86_64"}</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-stone-400 block font-bold text-[8px] uppercase tracking-wide">CAPTURE ADAPTER</span>
+                                        <span className="text-teal-700 font-bold break-all">{data?.adapterName || "Vercel-Serverless-SimNode"}</span>
+                                    </div>
+                                </div>
+                                <div className="space-y-2 pl-4 border-l border-stone-100">
+                                    <div>
+                                        <span className="text-stone-400 block font-bold text-[8px] uppercase tracking-wide">INTELLIGENCE STACK</span>
+                                        <span className="text-stone-850 font-black">Node.js + Python {data?.systemInfo?.python_version || "3.10.8"}</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-stone-400 block font-bold text-[8px] uppercase tracking-wide">SNIFFER GATEWAY STATUS</span>
+                                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[8px] font-black tracking-widest bg-emerald-50 text-emerald-700 border border-emerald-100 uppercase">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                                            Active (UDP/53)
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span className="text-stone-400 block font-bold text-[8px] uppercase tracking-wide">DEPLOYMENT TARGET</span>
+                                        <span className="text-stone-800 font-bold">{window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? "Local Workstation (Core)" : "Vercel Serverless (Simulated)"}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 2. Mathematical Threat Models Card */}
+                        <div className="enterprise-card p-8 rounded-[2rem] bg-white border border-stone-200 shadow-sm relative overflow-hidden group">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="p-2.5 bg-indigo-50 rounded-xl border border-indigo-100 shadow-sm">
+                                    <BrainCircuit className="w-5 h-5 text-indigo-600" />
+                                </div>
+                                <div>
+                                    <h3 className="text-stone-900 font-bold text-lg tracking-tight">Active Threat Detection Models</h3>
+                                    <p className="text-stone-400 text-[8px] font-mono uppercase tracking-widest mt-0.5">Statistical & Heuristic Modeling Specs</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-3 mt-4 border-t border-stone-100 pt-4 text-[9px] font-medium leading-normal text-stone-600">
+                                <div className="flex items-start gap-3">
+                                    <span className="px-1.5 py-0.5 bg-teal-50 border border-teal-200 rounded text-[7px] font-black text-teal-700 font-mono">MODEL A</span>
+                                    <div>
+                                        <span className="font-bold text-stone-850 block">Shannon Entropy Randomness Estimation (H(x))</span>
+                                        <p className="text-stone-500 text-[8.5px] mt-0.5">Calculates bitwise domain randomness. Flags high complexity subdomains carrying encrypted payloads (Limit: H(x) &gt;= 4.2).</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <span className="px-1.5 py-0.5 bg-purple-50 border border-purple-200 rounded text-[7px] font-black text-purple-700 font-mono">MODEL B</span>
+                                    <div>
+                                        <span className="font-bold text-stone-850 block">Lexical Subdomain Payload Density Filter</span>
+                                        <p className="text-stone-500 text-[8.5px] mt-0.5">Monitors label limits. Payloads exceeding 45 alphanumeric characters trigger anomalies, indicating raw byte encapsulation.</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <span className="px-1.5 py-0.5 bg-amber-50 border border-amber-200 rounded text-[7px] font-black text-amber-700 font-mono">MODEL C</span>
+                                    <div>
+                                        <span className="font-bold text-stone-850 block">QTYPE Frequency Structural Imbalance</span>
+                                        <p className="text-stone-500 text-[8.5px] mt-0.5">Measures TXT, CNAME, or C2 record weighting over standard A/AAAA host queries to capture outbound base64 tunneling protocols.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                         <div className="lg:col-span-2 space-y-10">
                             <div className="enterprise-card p-8 rounded-[2.5rem]">

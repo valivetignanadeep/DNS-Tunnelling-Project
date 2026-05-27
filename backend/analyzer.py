@@ -80,6 +80,16 @@ class DNSAnalyzer:
             q['timestamp'] = float(q['timestamp'])
             q['entropy'] = round(q['entropy'], 2)
 
+        import platform
+        import sys
+        system_info = {
+            "os": platform.system(),
+            "os_release": platform.release(),
+            "os_arch": platform.machine(),
+            "python_version": sys.version.split(' ')[0],
+            "processor": platform.processor() or "AMD64 Architecture"
+        }
+
         # Return both anomalies and aggregate stats
         return {
             "totalQueries": len(df),
@@ -88,7 +98,8 @@ class DNSAnalyzer:
             "volumeTrend": volume_trend[:50], 
             "results": anomalies,
             "logs": logs,
-            "allQueries": all_queries
+            "allQueries": all_queries,
+            "systemInfo": system_info
         }
 
     def detect_anomalies(self, df):
