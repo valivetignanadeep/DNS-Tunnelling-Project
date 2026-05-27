@@ -636,14 +636,14 @@ const Dashboard = ({ results, setResults, activeTab, detectionMode, isMonitorOpe
                                 <Database className="w-10 h-10 text-teal-600" />
                             </div>
                             <div>
-                                <h2 className="text-3xl font-bold tracking-tighter mb-3">Enterprise Traffic Inspector</h2>
+                                <h2 className="text-3xl font-bold tracking-tighter mb-3">Enterprise Traffic Inspection</h2>
                                 <p className="text-stone-500 text-base leading-relaxed font-medium max-w-4xl">
                                     Auditing full packet telemetry across the DNS protocol layer. This view provides the raw foundational data for our behavioral scoring engine, allowing for manual verification of automated alerts.
                                 </p>
                             </div>
                         </div>
                         <div className="human-card rounded-3xl p-4 bg-white border border-stone-200 overflow-hidden shadow-lg">
-                            <PacketLogTable data={allQueries} />
+                            <PacketLogTable data={allQueries} detectionMode={detectionMode} />
                         </div>
                     </div>
                 </div>

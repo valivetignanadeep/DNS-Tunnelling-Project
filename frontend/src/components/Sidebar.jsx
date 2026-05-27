@@ -12,7 +12,7 @@ const Sidebar = ({ activeTab, setActiveTab, onReset, detectionMode, setDetection
         { id: 'analysis', label: 'Lexical Analysis', icon: Activity },
         { id: 'entropy', label: 'Entropy Matrix', icon: BrainCircuit },
         { id: 'incidents', label: 'Threat Intelligence', icon: ShieldAlert },
-        { id: 'traffic', label: 'Network Inspector', icon: Database },
+        { id: 'traffic', label: 'Network Inspection', icon: Database },
         { id: 'docs', label: 'Engine Documentation', icon: BookOpen },
     ];
 
