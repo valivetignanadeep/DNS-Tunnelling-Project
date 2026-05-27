@@ -493,32 +493,29 @@ const Dashboard = ({ results, setResults, activeTab, detectionMode, isMonitorOpe
                             <div className="grid grid-cols-2 gap-4 font-mono text-[10px] leading-relaxed text-stone-600 mt-4 border-t border-stone-100 pt-4">
                                 <div className="space-y-2">
                                     <div>
-                                        <span className="text-stone-400 block font-bold text-[8px] uppercase tracking-wide">HOST OPERATING SYSTEM</span>
-                                        <span className="text-stone-850 font-black uppercase">{data?.systemInfo?.os || "Windows Node"} ({data?.systemInfo?.os_release || "POSIX Sim"})</span>
+                                        <span className="text-stone-400 block font-bold text-[8px] uppercase tracking-wide">SYSTEM MANUFACTURER (COMPANY)</span>
+                                        <span className="text-stone-850 font-black uppercase">{data?.systemInfo?.manufacturer || "LENOVO"}</span>
                                     </div>
                                     <div>
-                                        <span className="text-stone-400 block font-bold text-[8px] uppercase tracking-wide">RUNTIME ARCHITECTURE</span>
-                                        <span className="text-stone-850 font-black">{data?.systemInfo?.os_arch || "AMD64"} - {data?.systemInfo?.processor?.split(' ')[0] || "x86_64"}</span>
+                                        <span className="text-stone-400 block font-bold text-[8px] uppercase tracking-wide">SYSTEM MODEL DESIGNATION</span>
+                                        <span className="text-stone-850 font-black uppercase">{data?.systemInfo?.model || "Workstation Node"}</span>
                                     </div>
                                     <div>
-                                        <span className="text-stone-400 block font-bold text-[8px] uppercase tracking-wide">CAPTURE ADAPTER</span>
-                                        <span className="text-teal-700 font-bold break-all">{data?.adapterName || "Vercel-Serverless-SimNode"}</span>
+                                        <span className="text-stone-400 block font-bold text-[8px] uppercase tracking-wide">OPERATING SYSTEM VERSION</span>
+                                        <span className="text-stone-850 font-black uppercase">{data?.systemInfo?.os || "Windows"} {data?.systemInfo?.os_release || "Standard"}</span>
                                     </div>
                                 </div>
                                 <div className="space-y-2 pl-4 border-l border-stone-100">
                                     <div>
-                                        <span className="text-stone-400 block font-bold text-[8px] uppercase tracking-wide">INTELLIGENCE STACK</span>
-                                        <span className="text-stone-850 font-black">Node.js + Python {data?.systemInfo?.python_version || "3.10.8"}</span>
+                                        <span className="text-stone-400 block font-bold text-[8px] uppercase tracking-wide">RUNTIME PLATFORM & ARCH</span>
+                                        <span className="text-stone-850 font-black">{data?.systemInfo?.os_arch || "AMD64"} - {data?.systemInfo?.processor?.split(' ')[0] || "x86_64"}</span>
                                     </div>
                                     <div>
-                                        <span className="text-stone-400 block font-bold text-[8px] uppercase tracking-wide">SNIFFER GATEWAY STATUS</span>
-                                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[8px] font-black tracking-widest bg-emerald-50 text-emerald-700 border border-emerald-100 uppercase">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                                            Active (UDP/53)
-                                        </span>
+                                        <span className="text-stone-400 block font-bold text-[8px] uppercase tracking-wide">CAPTURE ADAPTER INTERFACE</span>
+                                        <span className="text-teal-700 font-bold break-all">{data?.adapterName || "Vercel-Serverless-SimNode"}</span>
                                     </div>
                                     <div>
-                                        <span className="text-stone-400 block font-bold text-[8px] uppercase tracking-wide">DEPLOYMENT TARGET</span>
+                                        <span className="text-stone-400 block font-bold text-[8px] uppercase tracking-wide">DEPLOYMENT TARGET HOST</span>
                                         <span className="text-stone-800 font-bold">{window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? "Local Workstation (Core)" : "Vercel Serverless (Simulated)"}</span>
                                     </div>
                                 </div>
