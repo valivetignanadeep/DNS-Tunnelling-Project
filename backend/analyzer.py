@@ -85,35 +85,25 @@ class DNSAnalyzer:
         import subprocess
         import os
         
-        manufacturer = "Vercel / Cloud Provider"
+        manufacturer = "Executive Security Node"
         model = "Serverless SimNode"
         
         if platform.system() == "Windows":
             try:
-                out_m = subprocess.check_output('wmic computersystem get manufacturer', shell=True).decode(errors='ignore')
-                lines_m = [line.strip() for line in out_m.split('\n') if line.strip()]
-                if len(lines_m) > 1:
-                    manufacturer = lines_m[1]
-                    
                 out_md = subprocess.check_output('wmic computersystem get model', shell=True).decode(errors='ignore')
                 lines_md = [line.strip() for line in out_md.split('\n') if line.strip()]
                 if len(lines_md) > 1:
                     model = lines_md[1]
             except Exception:
-                manufacturer = "LENOVO"
                 model = "Workstation Node"
         elif platform.system() == "Linux":
             try:
-                if os.path.exists('/sys/class/dmi/id/sys_vendor'):
-                    with open('/sys/class/dmi/id/sys_vendor', 'r') as f:
-                        manufacturer = f.read().strip()
                 if os.path.exists('/sys/class/dmi/id/product_name'):
                     with open('/sys/class/dmi/id/product_name', 'r') as f:
                         model = f.read().strip()
             except Exception:
                 pass
         elif platform.system() == "Darwin":
-            manufacturer = "Apple Inc."
             try:
                 out_md = subprocess.check_output(['sysctl', 'hw.model'], shell=True).decode(errors='ignore')
                 model = out_md.split(':')[-1].strip()

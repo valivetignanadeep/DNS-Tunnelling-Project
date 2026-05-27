@@ -90,7 +90,15 @@ const Dashboard = ({ results, setResults, activeTab, detectionMode, isMonitorOpe
                     results: [],
                     allQueries: [],
                     logs: ["[✓] Initialized advanced 5-tier classification simulation engine"],
-                    distribution: { critical: 0, high: 0, medium: 0 }
+                    distribution: { critical: 0, high: 0, medium: 0 },
+                    systemInfo: {
+                        manufacturer: "Executive Security Node",
+                        model: "Serverless SimNode",
+                        os: "Cloud OS",
+                        os_release: "Vercel Serverless",
+                        os_arch: "x86_64",
+                        processor: "Simulated Xeon Processor"
+                    }
                 };
             });
 
@@ -487,7 +495,7 @@ const Dashboard = ({ results, setResults, activeTab, detectionMode, isMonitorOpe
                                 <div className="space-y-2">
                                     <div>
                                         <span className="text-stone-400 block font-bold text-[8px] uppercase tracking-wide">SYSTEM MANUFACTURER (COMPANY)</span>
-                                        <span className="text-stone-850 font-black uppercase">{data?.systemInfo?.manufacturer || "LENOVO"}</span>
+                                        <span className="text-stone-850 font-black uppercase">{data?.systemInfo?.manufacturer || "Executive Security Node"}</span>
                                     </div>
                                     <div>
                                         <span className="text-stone-400 block font-bold text-[8px] uppercase tracking-wide">SYSTEM MODEL DESIGNATION</span>
