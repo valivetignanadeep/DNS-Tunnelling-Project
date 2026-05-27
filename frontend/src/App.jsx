@@ -1,4 +1,4 @@
-import React, { useState, Component } from 'react';
+import React, { useState, Component, useEffect, useMemo } from 'react';
 import FileUpload from './components/FileUpload';
 import Dashboard from './components/Dashboard';
 import Sidebar from './components/Sidebar';
@@ -70,12 +70,156 @@ function App() {
   const [isMonitorOpen, setIsMonitorOpen] = useState(false);
   const [liveActive, setLiveActive] = useState(true); // Single source of truth for live sniffer stream
 
+  // Unique tab identifier to manage Broadcast Channel leadership election
+  const tabId = useMemo(() => Math.random().toString(36).substring(2, 11), []);
+  
+  // Establish the BroadcastChannel on origin scope
+  const syncChannel = useMemo(() => new BroadcastChannel('dns_detector_tab_sync'), []);
+
+  // Multi-tab message broker hook
+  useEffect(() => {
+    let isMounted = true;
+
+    const handleSyncMessage = (event) => {
+      if (!isMounted) return;
+      const { type, payload, senderId } = event.data;
+
+      // Ignore our own loopbacks
+      if (senderId === tabId) return;
+
+      switch (type) {
+        case 'STATE_REQUEST':
+          // If we are currently running a session, respond with our active state
+          const isLeader = localStorage.getItem('dns_leader_tab') === tabId;
+          if (isLeader || results) {
+            syncChannel.postMessage({
+              type: 'STATE_RESPONSE',
+              senderId: tabId,
+              payload: {
+                view,
+                results,
+                activeTab,
+                detectionMode,
+                isMonitorOpen,
+                liveActive
+              }
+            });
+          }
+          break;
+
+        case 'STATE_RESPONSE':
+          // Elect the responder as the leader tab
+          localStorage.setItem('dns_leader_tab', senderId);
+          localStorage.setItem('dns_leader_heartbeat', Date.now().toString());
+          // Sync state values
+          setResults(payload.results);
+          setView(payload.view);
+          setActiveTab(payload.activeTab);
+          setDetectionMode(payload.detectionMode);
+          setIsMonitorOpen(payload.isMonitorOpen);
+          setLiveActive(payload.liveActive);
+          break;
+
+        case 'STATE_UPDATE':
+          // Dynamically synchronize live metrics, logs, trend charts, and state
+          setResults(payload.results);
+          setView(payload.view);
+          setActiveTab(payload.activeTab);
+          setDetectionMode(payload.detectionMode);
+          setIsMonitorOpen(payload.isMonitorOpen);
+          setLiveActive(payload.liveActive);
+          break;
+
+        case 'ACTION_NAVIGATE':
+          // Sync navigation tabs
+          setView(payload.view);
+          setActiveTab(payload.activeTab);
+          break;
+
+        case 'ACTION_MONITOR_TOGGLE':
+          // Sync monitor sidebar visibility
+          setIsMonitorOpen(payload.isMonitorOpen);
+          break;
+
+        case 'ACTION_RESET':
+          // Sync session resets
+          setResults(null);
+          setView('landing');
+          setActiveTab('overview');
+          setIsUploadOpen(false);
+          setDetectionMode('pcap');
+          setIsMonitorOpen(false);
+          break;
+      }
+    };
+
+    syncChannel.addEventListener('message', handleSyncMessage);
+
+    // Prompt active tabs to synchronize state upon load
+    syncChannel.postMessage({ type: 'STATE_REQUEST', senderId: tabId });
+
+    // Periodic heartbeat to maintain leadership registry
+    const heartbeatInterval = setInterval(() => {
+      const currentLeader = localStorage.getItem('dns_leader_tab');
+      if (currentLeader === tabId || !currentLeader) {
+        localStorage.setItem('dns_leader_tab', tabId);
+        localStorage.setItem('dns_leader_heartbeat', Date.now().toString());
+      } else {
+        // If leader heartbeat is lost (older than 2.5 seconds), assume leadership
+        const hb = parseInt(localStorage.getItem('dns_leader_heartbeat') || "0");
+        if (Date.now() - hb > 2500) {
+          localStorage.setItem('dns_leader_tab', tabId);
+          localStorage.setItem('dns_leader_heartbeat', Date.now().toString());
+        }
+      }
+    }, 1000);
+
+    return () => {
+      isMounted = false;
+      syncChannel.removeEventListener('message', handleSyncMessage);
+      clearInterval(heartbeatInterval);
+    };
+  }, [tabId, syncChannel, results, view, activeTab, detectionMode, isMonitorOpen, liveActive]);
+
+  // Synchronize state updates triggered by the active Leader tab
+  useEffect(() => {
+    const isLeader = localStorage.getItem('dns_leader_tab') === tabId;
+    if (isLeader && results) {
+      syncChannel.postMessage({
+        type: 'STATE_UPDATE',
+        senderId: tabId,
+        payload: {
+          results,
+          view,
+          activeTab,
+          detectionMode,
+          isMonitorOpen,
+          liveActive
+        }
+      });
+    }
+  }, [results, view, activeTab, detectionMode, isMonitorOpen, liveActive, tabId, syncChannel]);
+
   const handleAnalysisComplete = (data) => {
     if (data && typeof data === 'object') {
       setDetectionMode('pcap');
       setResults(data);
       setIsUploadOpen(false);
       setView('dashboard');
+      
+      // Broadcast static analysis payload
+      syncChannel.postMessage({
+        type: 'STATE_UPDATE',
+        senderId: tabId,
+        payload: {
+          results: data,
+          view: 'dashboard',
+          activeTab: 'overview',
+          detectionMode: 'pcap',
+          isMonitorOpen: false,
+          liveActive: true
+        }
+      });
     } else {
       console.error("Invalid analysis data received:", data);
     }
@@ -83,6 +227,21 @@ function App() {
 
   const handleToggleLive = async (nextState) => {
     setLiveActive(nextState);
+    
+    // Broadcast live active state toggle
+    syncChannel.postMessage({
+      type: 'STATE_UPDATE',
+      senderId: tabId,
+      payload: {
+        results,
+        view,
+        activeTab,
+        detectionMode,
+        isMonitorOpen,
+        liveActive: nextState
+      }
+    });
+
     try {
       await fetch(getApiUrl(`/api/live/${nextState ? 'start' : 'stop'}`), { method: 'POST' });
     } catch (err) {
@@ -93,7 +252,9 @@ function App() {
   const handleStartLive = async () => {
     setDetectionMode('live');
     setLiveActive(true); // Always start in active sniffer state
-    setResults({
+    localStorage.setItem('dns_leader_tab', tabId); // Claim leadership
+    
+    const initialLiveState = {
       totalQueries: 0,
       suspicious: 0,
       threats: 0,
@@ -106,9 +267,25 @@ function App() {
       allQueries: [],
       logs: ["Initializing live sniffer interface..."],
       distribution: { critical: 0, high: 0, medium: 0 }
-    });
+    };
+
+    setResults(initialLiveState);
     setView('dashboard');
     
+    // Broadcast capture start event
+    syncChannel.postMessage({
+      type: 'STATE_UPDATE',
+      senderId: tabId,
+      payload: {
+        results: initialLiveState,
+        view: 'dashboard',
+        activeTab: 'overview',
+        detectionMode: 'live',
+        isMonitorOpen: false,
+        liveActive: true
+      }
+    });
+
     try {
       await fetch(getApiUrl('/api/live/start'), { method: 'POST' });
     } catch (err) {
@@ -124,12 +301,45 @@ function App() {
         console.error("Failed to cease live capture:", err);
       }
     }
+    
+    // Clear local states
     setResults(null);
     setView('landing');
     setActiveTab('overview');
     setIsUploadOpen(false);
     setDetectionMode('pcap');
     setIsMonitorOpen(false);
+    
+    // Clear leadership key
+    localStorage.removeItem('dns_leader_tab');
+
+    // Broadcast reset action to all open windows
+    syncChannel.postMessage({
+      type: 'ACTION_RESET',
+      senderId: tabId
+    });
+  };
+
+  const handleSetActiveTabSync = (newTab) => {
+    setActiveTab(newTab);
+    
+    // Broadcast navigation click
+    syncChannel.postMessage({
+      type: 'ACTION_NAVIGATE',
+      senderId: tabId,
+      payload: { view, activeTab: newTab }
+    });
+  };
+
+  const handleSetMonitorOpenSync = (isOpen) => {
+    setIsMonitorOpen(isOpen);
+    
+    // Broadcast sidebar toggle
+    syncChannel.postMessage({
+      type: 'ACTION_MONITOR_TOGGLE',
+      senderId: tabId,
+      payload: { isMonitorOpen: isOpen }
+    });
   };
 
   return (
@@ -139,7 +349,7 @@ function App() {
           <>
             <Sidebar
               activeTab={activeTab}
-              setActiveTab={setActiveTab}
+              setActiveTab={handleSetActiveTabSync}
               onReset={handleReset}
               detectionMode={detectionMode}
               setDetectionMode={setDetectionMode}
@@ -152,12 +362,12 @@ function App() {
               activeTab={activeTab} 
               detectionMode={detectionMode}
               isMonitorOpen={isMonitorOpen}
-              setIsMonitorOpen={setIsMonitorOpen}
+              setIsMonitorOpen={handleSetMonitorOpenSync}
               liveActive={liveActive}
             />
             <PacketMonitorSidebar
               isOpen={isMonitorOpen}
-              onClose={() => setIsMonitorOpen(false)}
+              onClose={() => handleSetMonitorOpenSync(false)}
               liveData={results}
               liveActive={liveActive}
               onToggleLive={handleToggleLive}
